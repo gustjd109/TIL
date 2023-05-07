@@ -154,6 +154,3 @@
 - 응용 사례
     - 레드 블랙 트리 : linux kernel 내부에서 사용 / Java TreeMap 구현 / C++ std::map 구현 등
     - 균형 이진 탐색 트리 : dictionary / 한번 만들어 놓으면 삽입, 삭제가 거의 없고 검색이 대부분인 상황에서 사용
-
-## 8. 레드 블랙 트리 전체 정리 이미지
-<img src="/Users/hyunsunghwang/Desktop/GitHub/TIL/자료구조/Red Black Tree.JPG">
