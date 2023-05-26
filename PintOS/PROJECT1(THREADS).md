@@ -8,6 +8,7 @@
     - 명령어 : make
     - make 명령어를 실행하면, threads 디렉터리의 하위에 build 디렉터리가 생성됨
     - build 데렉터리에는 Makefile과 몇 개의 하위 디렉터리로 채운 다음 내부에 커널을 빌드합니다.
+
 ### Running Pintos
 - cd 명령어를 사용하여 새로 생성된 build 디렉터리로 이동
     - 명령어 : cd build
@@ -27,6 +28,7 @@
     - 스레드 동기화 또는 프로세스 동기화를 지원하기 위한 목적으로 OS와 같은 플랫폼으로 유저에게 제공하는 간단한 소프트웨어 매커니즘
     - 보통은 low level 매커니즘으로 atomic 연산, 메모리 경계, spinlock, context switch 등을 포함하는 개념
     - 흔히 아는 mutex, event, conditional variables, semaphore 같은 것들도 synchronization primitives라고 할 수 있음
+    
 ### Synchronization
 - 적절한 synchronization는 이러한 문제에 대한 해결책의 중요한 부분입니다. 모든 synchronization 문제는 interrupts를 off함으로써 쉽게 해결할 수 있습니다. interrupts를 off하면, concurrency이 없어지기 때문에 race condition에 대한 가능성이 없기 때문입니다. 따라서, 모든 synchronization 문제를 이러한 방식으로 해결하는 것이 바람직하지만 그렇지 않습니다. 대신 semaphores, locks 및 condition variables를 사용하여 synchronization 문제를 해결하기 바랍니다. 어떤 상황에서 어떤 synchronization primitives를 사용할지 모르는 경우, 동기화 섹션을 읽거나 threads/synch.c의 주석 부분을 보시기 바랍니다.<br><br>
 - 핀토스 프로젝트에서 intterupts를 비활성화함으로써 가장 잘 해결된 유일한 종류의 문제는 커널 스레드와 interrupt handler 간에 공유되는 데이터를 조정하는 것입니다. interrupt handler는 sleep할 수 없기 때문에 lock을 획득할 수 없습니다. 즉, 커널 스레드와 interrupt handler 간에 공유되는 데이터는 interrupt를 해제하여 커널 스레드 내에서 보호되어야 합니다.<br><br>
