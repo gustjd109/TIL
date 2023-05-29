@@ -1,4 +1,4 @@
-# WEEK08 DAY TIL
+# WEEK08 DAY1 TIL
 - 오늘의 학습 목록
 ```
 1. PintOS GitBook 읽기(Synchronization, Alarm Clock, Priority Scheduling, pintos run alarm-multiple 실행 방법)
