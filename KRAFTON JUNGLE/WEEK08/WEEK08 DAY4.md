@@ -5,6 +5,7 @@
 2. PintOS Priority Scheduling 구현 및 기존 함수 수정
     - cmp_priority() 함수 구현
     - test_max_priority() 함수 구현
+    - thread_create() 함수 수정
     - thread_unblock() 함수 수정
     - thread_yield() 함수 수정
     - thread_set_priority() 함수 수정
