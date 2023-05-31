@@ -906,3 +906,4 @@ void thread_wakeup(int64_t ticks) {
     FAIL tests/threads/mlfqs/mlfqs-block
     7 of 27 tests failed.
     ```
+마지막 과제 구현한 것들 정리 필요~!!!!!!!!!!!!!!!!!
