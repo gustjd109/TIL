@@ -84,7 +84,7 @@
                     |     initialized data segment     |
                     +----------------------------------+
                     |            code segment          |
-            0x400000  +----------------------------------+
+          0x400000  +----------------------------------+
                     |                                  |
                     |                                  |
                     |                                  |
@@ -301,32 +301,32 @@
     - 피호출자 / 호출을 당한 함수
     - main() 함수에서 func()이 호출되는 경우 func() 함수에 해당<br><br>
 3. Caller-saved-register(콜러가 저장하는 레지스터)
-    - main() 함수는 실행하면서 레지스터를 사용 -> func() 함수가 return되면, 다시 func() 함수가 호출되기 전 레지스터의 값을 가지고 있어야 함 -> 이 때, caller가 저장하고 보존되도록 신경써야 하는 레지스터(callee는 이 레지스터를 자유롭게 사용 가능)
-    - 사용하기 전 caller가 반드시 백업해야 하는 레지스터
-    - callee가 사용 가능
-    - 값이 보존되지 않아도 되는 경우에는 백업을 하지 않을 수 있음
+    - main() 함수는 실행하면서 레지스터를 사용한다. func() 함수가 return되면, 다시 func() 함수가 호출되기 전 레지스터의 값을 가지고 있어야 한다. 이 때, caller가 저장하고 보존되도록 신경써야 하는 레지스터(callee는 이 레지스터를 자유롭게 사용 가능)이다.
+    - 사용하기 전 caller가 반드시 백업해야 하는 레지스터이다.
+    - callee가 사용 가능하다.
+    - 값이 보존되지 않아도 되는 경우에는 백업을 하지 않을 수 있다.
     - 레지스터 종류
         - EAX(Extended Accumulator Register) : 논리 연산
-        - ECX(Extended Counter Register) : 카운터 레지스터로, 반복 명령어 사용시 반복 카운터로 사용
-        - EDX(Extended Data Register) : EAX와 같이 연산에 쓰이며, 부호 확장 명령 등에 쓰임<br><br>
+        - ECX(Extended Counter Register) : 카운터 레지스터로, 반복 명령어 사용시 반복 카운터로 사용한다.
+        - EDX(Extended Data Register) : EAX와 같이 연산에 쓰이며, 부호 확장 명령 등에 쓰인다.<br><br>
 4. Callee-saved-register(콜리가 저장하는 레지스터)
-    - 사용하기 전 callee가 반드시 백업해야 하는 레지스터
-    - caller가 사용 가능
-    - 함수 복귀 전 다시 값을 복원해야 함
-    - callee 입장에서는 caller가 백업을 필요로하는 레지스터가 무엇인지 모르기 때문에 무조건 백업
+    - 사용하기 전 callee가 반드시 백업해야 하는 레지스터이다.
+    - caller가 사용 가능하다.
+    - 함수 복귀 전 다시 값을 복원해야 한다.
+    - callee 입장에서는 caller가 백업을 필요로하는 레지스터가 무엇인지 모르기 때문에 무조건 백업해야 한다.
     - 레지스터 종류
-        - EBX(Extended Base address Register) : 메모리 주소 저장을 위한 레지스터로, ESI나 EDI와 결합하여 사용 가능
-        - ESI(Extended Source Index) : 데이터 조작 및 복사시 소스 데이터의 주소가 저장됨
-        - EDI(Extended Destination Index) : 복사 시 목적지의 주소가 저장되며, ESI 레지스터와 비슷
-        - EBP(Extended Base Pointer) : 스택 프레임의 시작 지점 주소(스택의 가장 윗 부분, 스택의 처음)가 저장되며, 현재 스택 프레임이 소멸되지 않는 이상 EBP 레지스터의 값은 변하지 않음
+        - EBX(Extended Base address Register) : 메모리 주소 저장을 위한 레지스터로, ESI나 EDI와 결합하여 사용 가능하다.
+        - ESI(Extended Source Index) : 데이터 조작 및 복사시 소스 데이터의 주소가 저장된다.
+        - EDI(Extended Destination Index) : 복사 시 목적지의 주소가 저장되며, ESI 레지스터와 비슷하다.
+        - EBP(Extended Base Pointer) : 스택 프레임의 시작 지점 주소(스택의 가장 윗 부분, 스택의 처음)가 저장되며, 현재 스택 프레임이 소멸되지 않는 이상 EBP 레지스터의 값은 변하지 않는다.
 
 ### 스택 프레임(Stack Frame)
 1. 스택 프레임이란?
-    - 함수의 호출 과정에서 호출되는 함수를 사용하기 위해 할당되는 스택의 공간을 의미
-    - 스택 영역의 함수를 구분하기 위해 생성되는 공간으로서 매개변수(parameter), 복귀할 명령어의 주소(return address), 지역변수(local variables), 이전 스택 프레임의 EBP값을 포함하고 있음
-    - 함수 호출 시 함수의 프롤로그(prolog) 과정을 통해 생성되고, 함수의 에필로그(epilog) 과정을 통해 함수가 종료되면서 소멸<br><br>
+    - 함수의 호출 과정에서 호출되는 함수를 사용하기 위해 할당되는 스택의 공간을 의미한다.
+    - 스택 영역의 함수를 구분하기 위해 생성되는 공간으로서 매개변수(parameter), 복귀할 명령어의 주소(return address), 지역변수(local variables), 이전 스택 프레임의 EBP값 등을 포함하고 있다.
+    - 함수 호출 시 함수의 프롤로그(prolog) 과정을 통해 생성되고, 함수의 에필로그(epilog) 과정을 통해 함수가 종료되면서 소멸된다.<br><br>
 2. gdb를 통해 함수 호출 실행 과정
-    - 예를 들어, 아래와 같은 코드가 있다고 가정
+    - 예를 들어, 아래와 같은 코드가 있다고 가정하자.
         ```C
         #include <stdio.h>
  
@@ -343,49 +343,54 @@
             return 0;
         }
         ```
-        - 단순히 두 개의 정수 값을 입력 받아 sum 함수를 호출하여 입력받은 두 정수의 합을 구하는 프로그램
+        - 단순히 두 개의 정수 값을 입력 받아 sum 함수를 호출하여 입력받은 두 정수의 합을 구하는 프로그램이다.
     - gdb를 통해 main() 함수를 살펴보자.  
         <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbQcZHH%2Fbtrrum3xGML%2FYH9CaZcMK76PH5Ky8zfdxK%2Fimg.png" height="300"></img>
-        - main() 함수를 확인해보면, 위와 같이 sum 함수를 호출하는 부분을 찾을 수 있음
-        - 함수를 호출할 때는 call 명령어을 수행
+        - main() 함수를 확인해보면, 위와 같이 sum 함수를 호출하는 부분을 찾을 수 있을 것이다.
+        - 함수를 호출할 때는 call instruction을 수행한다.
             ```
+            call instruction
             - push eip
             - jmp 함수의 주소
             ```
-    - sum 함수가 호출되기 전에 break를 걸어 실행하여 위에서 설명한 방식대로 동작하는지 확인  
+    - sum 함수가 호출되기 전에 break를 걸고 실행하여 위에서 설명한 방식대로 동작하는지 확인해보자.  
         <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Fb9hvca%2Fbtrro6OcrEB%2FZoG2F1PPKR91Gp3xttsgj0%2Fimg.png" height="390"></img>
-        - si 명령을 통한 sum() 함수 내부 확인  
+        - si 명령을 통한 sum() 함수 내부로 들어간 상태이다.  
             <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2F4ZNeX%2FbtrrpnbyWsX%2FekcwGqxuwK9cp3DeKte1sk%2Fimg.png" height="80"></img>
-            - esp를 확인해보면, 0x080484af(call 0x804846b의 다음 명령어) 주소가 스택에 push되어 있음
-            - return address(0x80484af) 오른쪽을 보면 3, 5가 들어가 있으며, 이는 parameter 값<br><br>
+            - esp를 확인해보면, 0x080484af(call 0x804846b의 다음 instruction) 주소가 스택에 push되어 있는 것을 확인 할 수 있다.
+            - return address(0x80484af) 오른쪽을 보면 3, 5가 들어가 있으며, 이는 parameter 값이다.<br><br>
 3. 함수의 프롤로그(Prolog)
-    - 함수의 프롤로그 부분에서는 스택 프레임을 형성하는 역할을 수행
-    - 함수의 프롤로그 명령어  
+    - 함수의 프롤로그는 함수 실행 준비과정으로, 자신이 이제 시작할거라고 알리는 과정이다.(=스택 프레임 형성)
+    - 함수의 프롤로그 instruction  
         <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FUr5fN%2FbtrrunuC6ol%2FxJkSOByD4e852kxCzzuwb1%2Fimg.png" height="200"></img>
-        - push ebp(base pointer)
-            - 스택 상에서 한 데이터를 가리키는 포인터
-            - 이전에 수행하던 함수의 데이터를 보존하기 위해 ebp를 push함으로써 caller 함수(현재 함수를 호출한 함수, main() 함수)의 ebp값을 스택에 저장  
+        - push ebp
+            - EBP(base pointer) : 스택 상의 한 데이터의 주소가 저장되어 있는 레지스터로, 그 데이터 위부터 한 함수가 실행된 이후의 값들이 쌓인다.
+                - 즉, 그 함수의 시작 지점이며, 함수가 종료되지 않는 한 EBP 값은 변하지 않는다.
+            - push ebp : 함수가 종료된 후 ebp를 이전 함수의 ebp로 재설정하기 위해 스택에 이전 함수의 ebp를 push 한다.  
                 <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbbbCJn%2FbtrrpT9dO9x%2FyGss7ekw5lFOnz75zB3RDk%2Fimg.png" height="300"></img>
-                - push ebp가 수행된 후 스택의 상태를 살펴보면, 0xbfffefe8(main 함수의 ebp)이 push되어 있음
-        - mov ebp, esp(stack pointer)
-            - 스택 세그먼트의 맨 꼭대기를 가리키는 포인터
-            - esp를 ebp에 복사함으로써 esp를 ebp 주소로 설정  
+                - push ebp가 수행된 다음 스택의 상태를 살펴보면, 0xbfffefe8(main() 함수의 ebp)이 push되어 있는 것을 확인 할 수 있다.
+        - mov ebp, esp
+            - ESP(stack pointer) : 스택의 맨 꼭대기의 주소가 저장되어 있는 레지스터로, ESP 값에서 push 또는 pop이 일어난다.
+            - mov ebp, esp : 호출된 함수의 시작을 알리기 위해 현재 esp 값을 ebp에 복사한다.  
                 <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FqCyVF%2FbtrrxXhUdxd%2FUzEsdUCVGudpC9pdTVk0w1%2Fimg.png" height="120"></img>
-                - mov ebp, esp가 수행된 후 스택의 상태를 살펴보면, esp가 가리키는 주소 값을 ebp에 복사함으로써 함수가 시작될 때 stack pointer와 base pointer가 새로 지정된 것을 확인할 수 있음<br><br>
+                - mov ebp, esp가 수행된 다음 스택의 상태를 살펴보면, esp가 가리키는 주소 값을 ebp에 복사함으로써 함수가 시작될 때 stack pointer와 base pointer가 새로 지정된 것을 확인할 수 있다.<br><br>
 4. 함수의 에필로그(Epilog)
-    - 함수의 에필로그 부분에서는 스택 프레임을 소멸시키는 역할을 수행
-    - 함수의 에필로그 명령어  
+    - 함수의 에필로그는 함수 내에서의 수행을 마치고 처음 호출한 지점으로 돌아가기 위해 스택을 복원하는 과정이다.(=스택 프레임 소멸)
+    - 함수의 에필로그 instruction  
         <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2Flbnyv%2Fbtrrwec9g2h%2FCMDwvxkT6rdrvwkp0mnc91%2Fimg.png" height="200"></img>
-        - leave 명령어
+        - leave instruction
             ```
             - mov esp, ebp
             - pop ebp
             ```
-            - stack pointer를 이전 base pointer로 저장해줌으로써 sum() 함수를 호출하면서 확장했던 스택 공간을 없애버리고, push해서 저장해두었던 이전 함수 main() 함수의 base pointer를 복원시키는 작업을 수행
-            - 위 과정을 거치면, esp는 return address를 가리키고 있게 됨
-        - ret 명령어
+            - mov esp, ebp : esp에 ebp 값을 복사해줌으로써 함수를 종료해주고(함수를 호출하면서 확장했던 스택 공간 소멸)
+            - pop ebp : 현재 esp 값이 가리키고 있는 sfp를 pop하여 ebp에 넣어줌으로써 이전 함수로 돌아가게(main() 함수의 ebp를 복원) 된다.
+            - 함수가 종료되면, ebp를 이전 함수의 ebp로 재설정해주는 과정으로 프롤로그와 반대로 진행한다.
+        - ret instruction
             ```
             - pop eip
+            - jmp eip
             ```
-            - call 명령어의 다음 명령어로 return 하라는 의미로서 EIP 레지스터에 return address를 pop하여 집어넣는 역할을 수행
-            - 위 과정을 거치면, call 명령어의 다음 명령어로 돌아가게 됨
+            - EIP : CPU가 다음에 실행해야 할 명령어의 주소가 저장되어 있는 레지스터이다.
+            - pop eip : 스택에 미리 저장해놓았던 return address(함수 종료 후 돌아갈 주소)를 eip에 넣어준다.
+            - jmp eip : 넣어준 그 주소로 이동해주어 함수를 호출한 후의 명령을 계속 수행할 수 있도록 해준다.
