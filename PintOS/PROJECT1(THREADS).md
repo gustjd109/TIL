@@ -247,7 +247,7 @@
 
 ## 4. Alarm Clock 구현
 ### 목표 🎯
-현재 핀토스에서 구현된 스레드를 잠시 재웠다가 일정 시간이 지나면 깨우는 기능인 Alarm Clock을 Busy-Waiting 방식에서 Sleep-Wakeup 방식으로 재구현 것이다.
+현재 핀토스에서 구현된 스레드를 잠시 재웠다가 일정 시간이 지나면 깨우는 기능인 Alarm Clock을 Busy-Waiting 방식에서 Sleep-Wakeup 방식으로 재구현 하는 것이다.
 
 ### Alarm Clock이란?
 Alarm Clock이란 운영체제에서 프로세르를 잠시 재웠다가 일정 시간이 지나면 다시 깨우는 기능이다.
@@ -509,64 +509,169 @@ void thread_wakeup(int64_t ticks) {
 
 ## 5. Priority Scheduling 구현
 ### 목표 🎯
-- 현재 핀토스의 스케줄러는 FIFO 스케줄링(=라운드 로빈 스케줄링)으로 구현되어 있다.
+현재 핀토스에서 스레드를 실행시키는 스케줄러를 우선순위 상관없이 스케줄링 해주는 FIFO 스케줄링(=라운드 로빈 스케줄링) 방식에서 우선순위 스케줄링 방식으로 재구현 하는 것이다.
 
-- 우리는 핀토스 스케줄러를 우선순위 스케줄링 방식으로 수정해야 한다.
-    - ready_list에 있는 스레드를 우선순위 기준으로 정렬한다. -> 비용이 매우 많이 든다.
-    - wait_list를 synchronization primitives(semaphore, condition variable)을 이용하여 정렬한다.
-    - 선점 기능을 구현한다.
-        - 선점 포인트 : 스레드가 ready_list에 추가되는 경우
+### Scheduler란?
+운영체제는 CPU와 같은 컴퓨터 자원들을 적절히 프로세스마다 배분함으로써 효율적으로 많은 프로세스들을 동시에 실행시킬 수 있다. 이런 역할을 수행하는 프로세스를 스케줄러라고 한다.
 
-- 우리가 구현해야 할 두 가지 포인트
+### Round-Robin Scheduling란?
+1. Round-Robin Scheduling이란?
+    - 선점형 스케줄링의 하나이다.
+    - 프로세스들 사이에 우선순위를 두지 않고, 시간단위 순서대로 CPU를 할당하는 방식이다.
+    - 컴퓨터 자원을 사용할 수 있는 기회를 프로세스들에게 공정하게 부여할 수 있다.
+    - 각 프로세스에 일정 시간을 할당하고, 일정 시간이 지나면 다음 프로세스에게 기회를 주고, 또 그 다음 프로세스에게 기회를 주는 방식으로 동작한다.
+    - 수행이 끝난 프로세스는 Queue 끝으로 밀려나기 때문에 기다리는 시간 + 실행 시간은 길어질 수밖에 없다는 단점이 있다.
+
+### 스케줄러를 우선순위 방식으로 어떻게 재구현 해야 할까?
+1. Ready_list에 스레드를 삽입할 때 우선순위가 높은 스레드가 앞부분에 위치하도록 정렬해야 한다.
+    - wait_list를 synchronization primitives(semaphore, condition variable)을 이용하여 정렬해야 한다.
+    - 선점 기능을 구현해야 한다.
+        - 선점 기능 구현 포인트 : 스레드가 ready_list에 추가되는 경우를 고려하여 구현해야 한다.<br><br>
+
+2. 우리가 구현해야 할 두 가지 포인트
     - Ready_list를 검사하여 실행할 스레드를 선택할 경우
         - 우선순위가 높은 스레드를 선택해야 한다.
     - lock을 기다리는 스레드가 있을 경우
-        - lock을 사용할 수 있을 때, 운영체제는 우선순위가 가장 높은 스레드를 선택한다.
+        - lock을 사용할 수 있을 때, 운영체제는 우선순위가 가장 높은 스레드를 선택해야 한다.<br><br>
 
-- 구현 시, 고려해야 할 세 가지 포인트
+3. 구현 시, 고려해야 할 세 가지 포인트
     - ready_list에서 실행시킬 스레드를 선택할 때, 우선순위가 가장 높은 스레드를 선택한다.
     - 선점
         - ready_list에 새로운 스레드를 추가할 때, 실행 중인 스레드와 우선순위를 비교한다.
         - 새로 추가된 스레드가 실행 중인 스레드보다 우선순위가 높다면, 새로 추가된 스레드가 실행중인 스레드를 선점힌다. 
     - lock(semaphore, condition variable)
-        - lock이 사용 가능해지거나 세마포어와 조건 변수가 사용 가능해지면, 운영체제는 우선순위가 가장 높은 스레드를 선택합니다.
+        - lock이 사용 가능해지거나 세마포어와 조건 변수가 사용 가능해지면, 운영체제는 우선순위가 가장 높은 스레드를 선택한다.<br><br>
 
-- 핀토스에서의 우선순위
+4. 핀토스에서의 우선순위
     - 핀토스에서의 우선순위 범위는 PRI_MIN(=0)부터 PRI_MAX(=63)까지 가지며, 숫자가 클수록 우선순위가 높다.
         - 기본값은 PRI_DEFAULT(=31)이다.
     - 핀토스 운영체제는 두 가지 기능을 제공하며, 생성된 thread의 우선순위는 다음 함수를 통해 변경이 가능하다.
         - void thread_set_priority(int new_priority)
-            - 스레드의 우선순위를 지정한 값으로 설정하는 함수 -> 현재 스레드의 우선순위를 new_priority로 변경
+            - 스레드의 우선순위를 지정한 값으로 설정하는 함수 -> 현재 스레드의 우선순위를 new_priority로 변경한다.
         - int thread_get_priority(void)
             - 현재 스레드의 우선순위를 반환하는 함수
 
-### 구현
-- 우선순위 수정 함수
-    - tid_t thread_create (const char *name, int priority, thread_func *function, void *aux)
-        - 새로운 스레드를 생성하는 함수이다.
-        - 새로 추가된 스레드가 실행 중인 스레드보다 우선순위가 높은 경우 CPU를 선점 할 수 있도록 thread_create() 함수를 수정한다.
-    - void thread_unblock (struct thread *t)
-        - block된 스레드를 unblock해주는 함수이다.
-        - 스레드가 unblock될 때 우선순위 정렬되어 ready_list에 추가되도록 수정한다.
-        - 현재 thread_unblock() 함수는 스레드를 unblock할 때, list_push_back() 함수를 이용하여 ready_list의 맨 끝에 추가하게끔 구현되어 있다.
-        - 스레드를 unblock할 때, list_push_back() 함수 대신에 list_insert_ordered() 함수를 사용하도록 수정한다.
-    - void thread_yield (void)
-        - 현재 수행중인 스레드가 사용중인 CPU를 양보하는 함수이다.
-        - ready_list에 추가된 새로운 스레드가 현재 진행 중인 스레드의 우선순위보다 높으면 현재 진행중인 스레드는 새로운 스레드에게 CPU를 양보하고, ready_list에 추가될 때 우선순위 순서로 정렬되어 추가 되도록 수정한다.
-    - void thread_set_priority (int new_priority)
-        - 현재 수행중인 스레드의 우선순위를 설정하는 함수이다.
-        - 현재 스레드의 우선순위와 ready_list에서 가장 높은 우선순위를 가진 스레드의 우선순위와 비교하여 스케줄링하도록 수정한다.
-    - void list_insert_ordered (struct list *list, struct list_elem *elem, list_less_func *less, void *aux)
-        - 새로운 ELEM를 비교를 진행하는 함수에 의해 정렬되어 리스트의 적절한 위치에 추가하는 함수이다.
-        - ready_list의 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수를 통해 리스트의 적절한 위치에 현재 스레드를 추가할 수 있도록 수정한다.
-- 우선순위 구현 함수
-    - void test_max_priority (void)
-        - ready_list에서 우선 순위가 가장 높은 스레드와 현재 스레드의 우선순위를 비교하는 함수이다.
-        - ready_list에서 우선 순위가 가장 높은 스레드와 현재 스레드의 우선순위를 비교하여 현재 스레드의 우선순위가 더 작으면 thread_yield() 함수를 호출하도록 구현한다.
-        - 이때, ready_list가 비어있을 경우를 고려하여 구현한다.
-    - bool cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED)
-        - 첫 번째 인자와 두 번째 인자의 우선순위를 비교하는 함수이다.
-        - 첫 번째 인자의 우선순위가 높으면 1을 반환, 두 번째 인자의 우선순위가 높으면 0을 반환하도록 구현한다.
+### ready 리스트에 있는 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수 선언 및 구현
+1. cmp_priority() 함수 선언
+    ```C
+    /* include/threads/thread.h */
+    bool cmp_priority (const struct list_elem *a_, const struct list_elem *b_, void *aux UNUSED);
+    ```
+2. cmp_priority() 함수 구현
+    ```C
+    /* threads/thread.c */
+    bool cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED) {
+        // 첫 번째 스레드의 우선순위가 높으면 1을 반환, 두 번째 스레드의 우선순위가 높으면 0을 반환
+	    return list_entry(a, struct thread, elem)->priority > list_entry(b, struct thread, elem)->priority;
+    }
+    ```
+    - 첫 번째 스레드의 우선순위가 높으면 1을 반환하고, 두 번째 스레드의 우선순위가 높으면 0을 반환한다.
+
+### 스레드가 unblock될 때 우선순위가 정렬된 상태로 ready 리스트에 스레드를 추가될 수 있도록 thread_unblock() 함수 수정
+```C
+/* threads/thread.c */
+/* 스레드를 ready_list에 추가하고, 상태를 READY로 변경하는 함수 */
+void thread_unblock (struct thread *t) {
+	enum intr_level old_level;
+
+	ASSERT (is_thread (t));
+
+	old_level = intr_disable (); // 인터럽트 비활성화
+	ASSERT (t->status == THREAD_BLOCKED);
+	// list_insert_ordered() 함수를 호출하여 ready_list의 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수를 통해 리스트의 적절한 위치에 현재 스레드를 추가
+	list_insert_ordered (&ready_list, &t->elem, cmp_priority, NULL);
+	t->status = THREAD_READY; // 현재 스레드의 상태를 READY로 변경
+	intr_set_level (old_level); // 인터럽트 활성화
+}
+```
+- thread_unblock() 함수 내부에서 list_push_back() 함수를 list_insert_ordered() 함수로 변경한다.
+- list_insert_ordered() 함수를 호출하여 ready_list의 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수를 통해 리스트의 적절한 위치에 현재 스레드를 추가한다.
+
+### 현재 수행중인 스레드가 사용중인 CPU를 양보하고 ready 리스트에 스레드를 추가할 때 우선순위가 정렬된 상태로 추가될 수 있도록 thread_yield() 함수 수정
+```C
+/* threads/thread.c */
+/* 현재 수행중인 스레드가 사용중인 CPU를 양보하는 함수 */
+void thread_yield (void) {
+	struct thread *curr = thread_current (); // 현재 스레드를 curr 변수에 저장
+	enum intr_level old_level;
+
+	ASSERT (!intr_context ());
+
+	old_level = intr_disable (); // 인터럽트 비활성화
+	if (curr != idle_thread) { // 현재 스레드가 idle 스레드가 아닌 경우
+		// list_insert_ordered() 함수를 호출하여 ready_list의 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수를 통해 리스트의 적절한 위치에 현재 스레드를 추가
+		list_insert_ordered (&ready_list, &curr->elem, cmp_priority, NULL);
+	}
+	do_schedule (THREAD_READY); // 현재 스레드의 상태를 READY로 변경
+	intr_set_level (old_level); // 인터럽트 활성화
+}
+```
+- thread_unblock() 함수와 마찬가지로 thread_yield() 함수 내부에서 list_push_back() 함수를 list_insert_ordered() 함수로 변경한다.
+- 현재 수행중인 스레드가 CPU를 양보하고, ready 리스트에 추가될 때 ist_insert_ordered() 함수를 호출하여 ready_list의 스레드와 현재 스레드의 우선순위를 비교하는 cmp_priority() 함수를 통해 리스트의 적절한 위치에 현재 스레드를 추가한다.
+
+### ready_list에서 우선순위가 가장 높은 스레드와 현제 스레드의 우선순위를 비교하여 현재 스레드의 우선순위가 더 낮으면 CPU를 양보하는 test_max_priority() 함수 선언 및 구현
+1. cmp_priority() 함수 선언
+    ```C
+    /* include/threads/thread.h */
+    void test_max_priority (void);
+    ```
+2. cmp_priority() 함수 구현
+    ```C
+    /* threads/thread.c */
+    bool cmp_priority (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED) {
+	// 첫 번째 스레드의 우선순위가 높으면 1을 반환, 두 번째 스레드의 우선순위가 높으면 0을 반환
+	return list_entry(a, struct thread, elem)->priority > list_entry(b, struct thread, elem)->priority;
+    }
+    ```
+    - 첫 번째 스레드의 우선순위가 높으면 1을 반환하고, 두 번째 스레드의 우선순위가 높으면 0을 반환한다.
+
+### 새로 추가된 스레드가 실행 중인 스레드보다 우선순위가 높은 경우 CPU를 선점 할 수 있도록 thread_create() 함수 수정
+```C
+/* threads/thread.c */
+tid_t thread_create (const char *name, int priority, thread_func *function, void *aux) {
+	struct thread *t;
+	tid_t tid;
+
+	ASSERT (function != NULL);
+
+	/* Allocate thread. */
+	t = palloc_get_page (PAL_ZERO);
+	if (t == NULL)
+		return TID_ERROR;
+
+	/* Initialize thread. */
+	init_thread (t, name, priority);
+	tid = t->tid = allocate_tid ();
+
+	/* Call the kernel_thread if it scheduled.
+	 * Note) rdi is 1st argument, and rsi is 2nd argument. */
+	t->tf.rip = (uintptr_t) kernel_thread;
+	t->tf.R.rdi = (uint64_t) function;
+	t->tf.R.rsi = (uint64_t) aux;
+	t->tf.ds = SEL_KDSEG;
+	t->tf.es = SEL_KDSEG;
+	t->tf.ss = SEL_KDSEG;
+	t->tf.cs = SEL_KCSEG;
+	t->tf.eflags = FLAG_IF;
+
+	/* Add to run queue. */
+	thread_unblock (t);
+	test_max_priority (); // 현재 스레드의 우선순위와 ready_list에서 가장 높은 우선순위를 가진 스레드의 우선순위와 비교하는 test_max_priority() 함수 호출
+
+	return tid;
+}
+```
+- 스레드가 새로 생성되는 thread_create() 함수에도 스레드가 새로 생성되어 ready 리스트에 추가될 때 우선순위를 기준으로 추가될 수 있도록 test_max_priority() 함수를 추가한다.
+
+### 현재 스레드의 우선순위와 ready 리스트에서 가장 높은 우선순위를 가진 스레드의 우선순위와 비교하여 스케줄링하도록 thread_set_priority() 함수 수정
+```C
+/* threads/thread.c */
+void thread_set_priority (int new_priority) {
+	thread_current ()->init_priority = new_priority; // 현재 스레드의 우선순위를 new_priority 값으로 설정
+	test_max_priority (); // 현재 스레드의 우선순위와 ready_list에서 가장 높은 우선순위를 가진 스레드의 우선순위와 비교하는 test_max_priority() 함수 호출
+}
+```
+- 현재 실행중인 스레드의 우선순위가 재 조정되는 순간에 ready 리스트의 첫 번째 스레드가 CPU를 점유 중인 스레드 보다 우선순위가 높은 상황이 발생할 수 있으므로, 우선순위를 비교할 수 있도록 test_max_priority() 함수를 추가한다.
 
 ### 결과
 1. Priority Scheduling 구현 전 결과
@@ -632,7 +737,8 @@ void thread_wakeup(int64_t ticks) {
     16 of 27 tests failed.
     ```
 
-## 6. Priority Scheduling - Synchronization 구현
+## 6. Priority Scheduling - Synchronization primitives 구현
+
 ### 목표 🎯
 - 현재 핀토스는 세마포어를 대기하고 있는 스레드들의 리스트인 waiters가 FIFO로 구현되어 있다.
 
@@ -906,4 +1012,21 @@ void thread_wakeup(int64_t ticks) {
     FAIL tests/threads/mlfqs/mlfqs-block
     7 of 27 tests failed.
     ```
-마지막 과제 구현한 것들 정리 필요~!!!!!!!!!!!!!!!!!
+
+다음 내용에 대해서 시간날때 정리해보시기 바랍니다.
+쓰레드 상태 (무엇이 있는지, 어떤 함수 또는 인터럽트등이 불려지면 어떤 상태로 전환되는지)
+스케줄링이 무엇인지? (1의 함수들 호출과 스케줄링 관계 설명)
+컨택스트 스위칭이란? + PCB
+동기화 수단 (무엇이 있는지, 각각을 비교) - semaphore, lock, monitor (mutex)
+프로세스와 쓰레드의 차이점
+atomic이란?
+스케줄링 알고리즘 (fifo, rr, ...)
+프로세스는 무엇을 가상화하고 있나요? (토요일 권영진교수님 특강에서 아주 쉽게 설명해주실것 같네요)
+이번주 과제 구현을 통해서, 위의 내용을 거의 대부분 구현(?)했습니다.
+과제는 해당 개념을 익히기 위한 수단이었습니다.
+현업에서 프로세스/쓰레드 API를 자주 씁니다.
+하지만 운영체제 내부를 이해하고 쓰는 분은 많지 않습니다.
+면접관님이 운영체제에 대해서 이런 범위에서 질문을 하실텐데요.
+개념적인 내용에 대해서 잘 대답하고
+추가로 “그것들의 내부 구현은 이렇게 되어있습니다” 라고 설명한다면
+기본기가 충실하면서, 경쟁력 있는 신입으로 보이지 않을까요?
