@@ -544,3 +544,1579 @@
         - 이후 dup()함수를 활용해서 fd를 복사해서 fd2에 넣었더니 fd2가 5가 되었다.
         - 이것은 3이 이미 사용중인 파일 디스크럽터이고, 4도 지금 현재 fd2에서 사용중이므로 5번이 새로 할당된 것이다.
         - 즉, dup()를 통해서 복제를 하면 새로운 파일 디스크립터를 생성한다고 생각하면 된다.
+
+### User mode & Kernel mode
+1. 커널(kenel)이란?
+    - 컴퓨터 과학에서 커널은 운영체제의 핵심 부분으로서, 운영체제의 다른 부분 및 응용 프로그램 수행에 필요한 여러가지 서비스를 제공한다.(=마치 사람의 심장, 혹은 자동차의 엔진과도 같은 존재)
+    - 보안, 자원관리, 추상화 역할을 수행한다.
+    - 컴퓨터의 자원은 CPU, 메모리, 가상메모리, 키보드, 마우스 등과 추상적으로는 스레드, 패킷, 프로토콜, 테스크를 의미한다.
+    - 커널은 이러한 자원을 효율적으로 관리하기 위해 CPU 스케줄링, 메모리 관리, 입출력 관리, 파일 시스템 관리 등의 업무를 수행한다.<br><br>
+2. 디바이스 드라이버(device driver)란?
+    - 특정 하드웨어난 장치를 제어하기 위한 커널의 일부분으로 동작하는 프로그램이다.
+    - 컴퓨터를 구성하는 다양한 입출력 장치마다 각각 장치 드라이버가 프로그램 커널에 통합되어 실행된다.
+    - 쉽게 이야기 하면, 우리가 쓰는 모든 입출력 장치(키보드, 모니터, 마우스, 복합기 등)와 컴퓨터(OS)가 서로 알아들을 수 있게 통역해주는 역할을 수행한다.
+    - 어렵게 이야기 하면, 컴퓨터의 버스나 통신 시스템을 이용하여 하드웨어와 커널 사이에서 명령어나 데이터를 전달해주는 역할을 수행한다.<br><br>
+3. 유저 모드와 커널 모드의 필요성
+    - 운영체제에서는 커널 모드와 유저 모드 두가지 프로세서 접근모드를 지원한다.
+    - 그 이유는 유저 어플리케이션이 함부로 운영체제의 치명적인 데이터를 수정하거나 삭제하지 못하게 하기 위함이다.<br><br>
+4. 유저 모드와 커널 모드(슈퍼바이저 모드)
+    - 유저 모드
+        - 운영체제 서비스를 제공받을 수 없는 실행 모드입니다.
+        - 즉, 커널 영역의 코드를 실행할 수 없는 모드입니다.
+        - 일반적인 응용 프로그램은 기본적으로 유저 모드로 실행됩니다.
+        - 유저 모드로 실행 중인 CPU는 입출력 명령어와 같이 하드웨어 자원에 접근하는 명령어를 실행할 수 없습니다.
+        - 그래서 유저 모드로 실행되는 일반적인 응용 프로그램은 자원에 접근할 수 없습니다.
+    - 커널 모드
+        - 운영체제 서비스를 제공받을 수 있는 실행 모드입니다.
+        - 즉, 커널 영역의 코드를 실행할 수 있는 모드입니다.
+        - CPU가 커널 모드로 명령어를 실행하면 자원에 접근하는 명령어를 비롯한 모든 명령어를 실행할 수 있습니다.
+        - 운영체제는 커널 모드로 실행되기 때문에 자원에 접근할 수 있습니다.<br><br>
+5. 하드웨어적으로 유저 모드와 커널 모드의 구분 방법
+    - 커널 모드와 유저 모드를 구분하기 위해 하드웨어적으로 CPU 내부에 일부 제어 레지스터인 모드 비트(mode bit)를 제공한다.
+    - 모드 비트가 0(유저 모드로 실행 중)으로 세팅되어 있으면 커널 모드로서 모든 명령을 수행할 수 있고, 모드 비트가 1(커널 모드로 실행 중)로 세팅되어 있으면 유저 모드로서 제한된 명령만을 수행할 수 있습니다.
+    - 따라서, CPU는 보안과 관련된 명령을 수행하기 전에는 항상 모드 비트는 조사해 모드 비트가 0으로 세팅된 경우에만 그 명령을 수행하게 됩니다.<br><br>
+6. 유저 모드와 커널 모드의 전환
+    - 프로세스가 실행되는 동안 프로세스는 수없이 유저 모드와 커널 모드를 반복하면서 실행된다.
+    - 유저 모드 -> 커널 모드
+        - 프로세스가 유저모드에서 실행되다가 특별한 요청이 필요할 때 시스템 콜을 이용해서 커널에 요청한다.
+    - 커널 모드 -> 유저 모드
+        - 시스템 콜의 요청을 받아 커널이 그 요청에 대한 작업을 수행하고 결과값을 시스템 콜의 리턴 값으로 전송한다.
+    - 예를 들어, 프로세스가 유저 모드에서 작업을 수행하다 하드웨어 접근 등 보안에 필요한 중요한 명령을 수행해야 할 경우가 발생했다고 가정하자.
+        - 유저 모드가 시스템 콜(소프트웨어 인터럽트)을 통해 운영체제에게 서비스를 대신해 줄 것을 요청하게 됩니다.
+        - 그러면 유저 모드는 CPU의 제어권을 운영체제로 넘기고, 커널 모드는 프로그램의 현재 CPU 상태를 저장한다.
+        - 인터럽트가 발생할 때에는 모드 비트가 자동적으로 0으로 세팅되어 필요한 작업을 수행한다.
+        - 요청된 작업이 끝나게 되면 시스템 콜의 리턴 값을 유저 모드에 전송하고, 모드 비트는 다시 1로 만들어 사용자 프로그램에게 CPU를 넘겨주면서 CPU 상태를 다시 복원한다.
+        - 유저 모드에서는 중단되었던 프로그램이 이어서 실행된다.
+
+### CPU Protection Rings  
+<img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FSSKMM%2Fbtq2ryI2UYz%2FgfUf546cBogDd2wDK3MYNK%2Fimg.png" height="250"></img>
+1. CPU도 권한 모드라는 것을 가지고 있다. 
+    - 대표적으로 유저 모드와 커널 모드가 있다.
+    - 대부분의 운영체제는 ring0과 ring3을 사용한다.
+    - ring3을 유저 모드라고 지칭하고, ring0을 커널 모드라고 지칭한다.
+
+### Interrupt(인터럽트)
+1. 인터럽트란?
+    - 시스템에서 발생한 다양한 종류의 이벤트 혹은 그런 이벤트를 알리는 메커니즘이다.
+    - 인터럽트가 발생하면 CPU에서는 즉각적으로(실행중이던 작업은 완료하고 나서 처리) 인터럽트를 처리하기 위해 커널 코드를 커널 모드에서 실행한다.<br><br>
+2. 인터럽트 종류
+    - 전원(power)에 문제가 생겼을 경우
+    - I/O 작업이 완료됐을 경우
+    - 시간이 다 됐을 경우(timer 관련)
+    - 0 으로 나눴을 경우
+    - 잘못된 메모리 공간에 접근을 시도할 경우
+    - 위 경우 외에도 많은 종류의 인터럽트가 있다.
+
+### System Call(시스템 콜)
+1. 시스템 콜이란?
+    - 운영체제의 커널이 제공하는 서비스에 대해, 응용 프로그램의 요청에 따라 커널에 접근하기 위한 인터페이스이다.
+    - 보통 C나 C++과 같은 고급 언어로 작성된 프로글매들은 직접 시스템 콜을 사용할 수 없기 때문에 고급 API를 통해 시스템 호출에 접근하게 하는 방법이다.
+    - 시스템 콜이 발생하면 해당 커널 코드가 커널 모드에서 실행된다.<br><br>
+2. 시스템 콜을 사용하는 이유
+    - 유저 어플리케이션이 운영체제의 치명적인 데이터를 수정/삭제하는 권한을 막기 위함이다.<br><br>
+3. 시스템 콜의 종류  
+    <img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcA9in9%2Fbtqw9OAIYdZ%2FkKNVkBl0y9k9R3EjTNyNI0%2Fimg.png"></img>
+    - 프로세스 제어(process control)
+        - 끝내기(exit), 중지(abort)
+        - 적재(load), 실행(execute)
+        - 프로세스 생성(create process) : fork
+        - 프로세스 속성 획득과 속성 설정
+        - 시간 대기(wait time)
+        - 사건 대기(wait event)
+        - 사건을 알림(signal event)
+        - 메모리 할당 및 해제
+    - 파일 조작(file manipulation)
+        - 파일 생성(create), 파일 삭제(delete)
+        - 파일 열기(open), 파일 닫기(close), 파일 읽기(read), 파일 쓰기(write)
+        - 위치 변경(reposition)
+        - 파일 속성 획득 및 설정(get file attribute, set file attribute)
+    - 장치 관리(device manipulation)
+        - 하드웨어의 제어와 상태 정보 얻기(ioctl)
+        - 장치 요구(request device), 장치 방출(release device)
+        - 읽기(read), 쓰기(write), 위치 변경(reposition)
+        - 장치 속성 획득 및 설정
+        - 장치의 논리적 부착 및 분리
+    - 정보 유지(information maintaenance)
+        - getpid(), alarm(), sleep()
+        - 시간과 날짜의 설정과 획득(time)
+        - 시스템 데이터의 설정과 획득(date)
+        - 프로세스 파일, 장치 속성의 획득 및 설정
+    - 틍신(communication)
+        - pipe(), shm_open(), mmap()
+        - 통신 연결의 생성, 제거
+        - 메시지의 송신, 수신
+        - 상태 정보 전달
+        - 원격 장치의 부착 및 분리
+    - 보호(protection)
+        - chmod()
+        - umask()
+        - chown()
+
+```
+추가 개념 학습 필요 항목
+1. Process
+    - Process Environment block (PEB)
+    - Process identifier (PID)
+2. Register vs. Memory
+3. argument vector
+4. Executable Linkable Format (ELF) & loader
+```
+
+## 3. Argument Passing 구현
+### 목표 🎯
+프로그램과 인자를 구분하지 못하는 구조인 현재 핀토스를 커맨드 라인의 문자열을 토근으로 분리하는 기능을 개발하고, 프로그램 이름과 인자를 구분하여 스택에 저장 및 프로그램에 전달할 수 있도록 구현하는 것이다.
+
+### 전체적인 프로그램 실행 과정 파악
+1. 현재 핀토스에서의 프로그램 실행 과정을 한 단계씩 살펴보자.
+    - 1단계 : init.c의 main() 함수 실행
+        - 핀토스가 시작되면, 이 함수를 통해 핀토스가 실행된다.
+        - 여기서 처음 실행할 스레드, 콘솔, 메모리, 페이지, 인터럽트 핸들러, 타이머 등을 초기화 해주는 작업이 진행된다.
+        - 우리는 USERPROG이므로, USERPROG 블록 안에 있는 init 함수들을 잘 살펴봐야 한다.<br><br>
+    - 2단계 : init.c의 run_actions() 함수 실행
+        - 이 함수는 Kernel command line에 정의된 action을 실행하며, argv를 인자로 받는다.
+        - 이 과제에서의 kernel command line은 pintos --fs-disk=10 -p tests/userprog/args-single:args-single -- -q -f run 'args-single onearg'이다.
+        - argv는 read_command_line() 함수에서 커널 명령줄을 읽은 후, parse_options() 함수로 해당 멍령줄을 parsing하여 어떠한 action을 할지를 argv에 담아 인자로 넘긴다.
+        - 위에서 명시한 명령줄이 parse_options()으로 들어가면, power_off_when_done(-q)와 format_filesys(-f) action을 수행할 수 있도록 true로 만들어주고, 다시 argv를 반환한다.
+        - run_actions() 함수 안에는 action이라는 구조체가 정의되어 있다.
+        - action 이름, action을 포함하여 command line에 있는 argument의 개수, action에 대응하는 정의된 function을 가진다.
+        - 우리는 위에서 명시한 명령줄에 있는 "run"이라는 action만 신경쓰면 되고, 그에 따라 대응하는 run_task() 함수가 실행된다.
+        - while 문을 통해 action 구조체를 탐색하면서 인자로 받은 argv와 action 구조체에 정의된 action name을 비교하여 똑같다면 정의된 function을 실행한다.<br><br>
+    - 3단계 : init.c의 run_task() 함수 실행
+        - 유저 프로세스가 생성되었다면, 커널은 프로세스 종료를 대기한다.
+        - 인자로 받은 argv는 run 'args-single onearg'이므로, argv[1]은 'args-single onearg'이 된다.
+        - 우리는 아까 USERPROG 블록 안에 있는 함수들을 잘 살펴봐야 한다고 했다.
+        - 이 함수에서 thread_tests가 참이면, task를 인자로 받아 run_test() 함수가 실행된다.
+        - thread_tests는 위에서 설명한 parse_options() 함수를 통해 thread_tests action을 수행할 수 있도록 true로 만들어줘야 하는데 위에서 명시한 명령줄에는 thread_tests action을 수행할 수 있도록 해주는 -threads-tests 명령어가 없다.
+        - 따라서, 우리는 바로 process_wait() 함수가 실행되고, process_wait() 함수에서는 task(=args-single onearg)를 인자로 받는 process_create_initd() 함수를 실행한다.<br><br>
+    - 4단계 : process.c의 process_create_initd() 함수 실행
+        - page_get_page() 함수를 통해 page를 할당받고 해당 page에 file_name을 저장한 후, 현재 핀토스에서는 단일 스레드만 고려하기 때문에 thread_create() 함수로 새로운 스레드를 생성한 다음 tid를 반환한다.
+        - tid는 thread의 고유한 id로, Allocate_tid() 함수에 의해 생성된다.
+        - thread_create() 함수는 file_name을 이름으로 하고 PRI_DEFAULT(31)를 우선순위 값으로 가지는 새로운 스레드를 생성한다.
+        - 이때, fn_copy를 인자로 받는 initd() 함수가 실행된다.<br><br>
+    - 5단계 : process.c의 initd() 함수 실행
+        - process_init() 함수로 프로세스를 초기화하고, process_exec() 함수를 실행한다.
+        - process_exec() 함수를 실행된 후 반환된 값이 0보다 작은 즉, -1인 경우 PANIC("Fail to launch initd\n");과 PANIC ("executed an unreachable statement");이 발생한다.
+        - 여기서 반환된 값이란 _if와 file_name을 현재 프로세스에 load하여 성공하면 0을, 실패하면 -1이 반환된 값을 의미한다.<br><br>
+    - 6단계 : process.c process_exec() 함수 실행
+        - process_cleanup() 함수를 통해 현재 실행 중인 스레드의 page directory와 switch information을 지워주고, load() 함수를 통해 파일을 load하여 성공하면, do-iret() 함수를 통해 생성된 프로세스로 context switching 한다.
+        - 인자로 전달받은 f_name은 args-single onearg이다.
+        - **우리는 load() 함수에서 인자로 전달받은 f_name을 parsing하고, user stack에 쌓는 작업을 구현해야 한다.**<br><br>
+    - 7단계 : process.c의 thread_create() 함수 실행
+        - 스레드를 생성하고, ready_list에 우선순위를 비교하여 적절한 위치에 추가한 다음 tid를 반환한다.<br><br>
+    - 8단계 : process.c의 process_wait() 함수 실행
+        - process_create_initd() 반환된 tid를 인자로 받아 프로세스가 종료되기까지 대기한다.
+        - 현재 process_wait() 함수에는 return -1만 있어서 바로 프로세스가 종료될 것이다.
+        - 우리는 argument passing을 구현하고 테스트를 위해 이 함수를 조금 바꿔줘야 한다.<br><br>
+    - 9단계 : init.c의 run_task() 함수 실행
+        - 프로세스가 종료되었으므로, "Execution of 'args-single onearg' complete." 문장을 출력하고 함수를 빠져나온다.<br><br>
+    - 10단계 : init.c의 main() 함수 실행
+        - main() 함수로 돌아와서 핀토스를 종료한다.
+
+### 인자로 전달받은 kenel command line을 parsing하여 스레드를 새로 생성할 때 parsing한 파일 이름을 인자로 전달할 수 있도록 함수 수정
+```C
+tid_t process_create_initd (const char *file_name) {
+	char *fn_copy;
+	tid_t tid;
+
+	/* Make a copy of FILE_NAME.
+	 * Otherwise there's a race between the caller and load(). */
+	fn_copy = palloc_get_page (0);
+	if (fn_copy == NULL)
+		return TID_ERROR;
+	strlcpy (fn_copy, file_name, PGSIZE);
+
+	char *save_ptr;
+    strtok_r (file_name, " ", &save_ptr); // 인자로 받은 file_name parsing
+
+	/* Create a new thread to execute FILE_NAME. */
+	tid = thread_create (file_name, PRI_DEFAULT, initd, fn_copy); // 위에서 parsing한 파일 이름을 새로 생성할 스레드 이름으로 지정
+	if (tid == TID_ERROR)
+		palloc_free_page (fn_copy);
+	return tid;
+}
+```
+- 인자로 받은 kenel command line을 parsing하여, parsing한 파일 이름을 새로 생성할 스레드 이름으로 생성할 수 있도록 코드를 수정한다.
+
+### 입력받은 kernel command line 파싱 기능 구현
+```C
+/* userprog/process.c */
+/* 실행파일의 file_name을 적재해 실행하는 함수 */
+static bool load (const char *file_name, struct intr_frame *if_) {
+    . . .
+
+    char *argv[LOADER_ARGS_LEN]; // argument 배열 포인터 변수 선언
+	char *token, *save_ptr; // 토큰과 parsing하고 남은 문자열의 시작주소 포인터 변수 선언
+	int argc = 0; // argument 개수 변수 선언 및 0으로 초기화
+
+	token = strtok_r (file_name, " ", &save_ptr); // 토큰에 문자열을 parsing하고 나온 file_name 저장
+
+	while (token) { // 트큰이 NULL일 때까지 문자열 parsing 수행
+		argv[argc++] = token; // 0번째 argument부터 parsing하고 나온 인자 저장
+		token = strtok_r (NULL, " ", &save_ptr); // 토큰에 위에서 parsing하고 남은 문자열을 다시 parsing하여 저장(두 번째 parsing부터는 첫 번째 인자를 NULL로 설정)
+	}
+
+    . . . 
+}
+```
+- 우리는 인자로 전달받은 file_name인 'args-single onearg'을 파일 이름과 인자로 파싱하는 기능을 먼저 구현해야 한다.
+- 아래 4개의 변수를 먼저 선언해야 한다.
+    - char *argv[LOADER_ARGS_LEN] : file_name을 파싱하고 나온 문자열을 저장할 char형 포인터 변수
+        - LOADER_ARGS_LEN : 이미 선언된 kernel command line 문자열 길이(핀토스에서는 128이 최대)
+    - char *token, *save_ptr : file_name을 파싱하고 나온 문자열을 저장할 임시 변수와 파싱하고 남은 문자열의 시작주소를 저장할 포인터 변수
+    - int argc = 0 : 인자 개수를 저장할 정수형 변수
+- strtok_r() 함수를 이용하여 file_name을 파싱해서 token에 파일 이름 즉, args-single을 저장한다.
+- token이 NULL이 될 때까지 문자열 파싱 작업을 계속 반복하면서 0번째 argv부터 파싱하고 나온 문자열이 저장된 token을 저장한다.
+
+### Parsing한 argument를 user stack에 쌓는 함수 구현
+```C
+/* userprog/process.h */
+void argument_stack (char **argv, int argc, struct intr_frame *_if);
+```
+- 제일 먼저 함수를 process.h에 선언해 주고, 함수 구현을 시작한다.<br><br>
+```C
+/* parsing한 arguments를 user stack에 넣어주는 함수 */
+/* if_->rsp는 현재 user stack에서 현재 위치를 가리키는 스택 포인터로, 맨 처음 if_->rsp는 0x47480000(USER_STACK)이다. */
+void argument_stack(char **argv, int argc, struct intr_frame *_if) {
+	char *arg_address[128];
+
+	// 1) 프로그램 이름, 인자 문자열 삽입
+	// 스택은 아래 방향으로 성장하므로 스택에 인자를 추가할 때 문자열을 오른쪽에서 왼쪽 방향으로(역방향으로) 삽입해야 한다.
+	for (int i = argc - 1; i >= 0; i--) { // 맨 끝 NULL 값(arg[4]) 제외하고, 가장 인덱스가 큰 argv부터 스택에 삽입
+		int argv_len = strlen(argv[i]);  // 각 인자의 크기 저장
+		_if->rsp -= (argv_len + 1); // 각 인자에서 인자 크기(argv_len)를 읽고, 그 크기만큼 rsp를 내림
+		memcpy(_if->rsp, argv[i], argv_len + 1); // 그 다음 빈 공간만큼 memcpy() 함수를 이용하여 스택에 삽입(각 인자에 sentinel이 포함이므로, argv_len + 1)
+		arg_address[i] = _if->rsp; // arg_address 배열에 현재 문자열 시작 주소 위치 저장
+    }
+
+	// 2) word-align 패딩 삽입
+	// 각 문자열을 삽입하고, 8바이트 단위로 정렬하기 위해 필요한 만큼 패딩을 추가한다.
+    while(_if->rsp % 8 != 0) { // _if->rsp 주소값을 8로 나눴을 때 나머지가 0일 때까지 반복문 수행
+        _if->rsp--; // _if->rsp -1 이동
+        *(uint8_t *)(_if->rsp) = 0; // _if.rsp가 가리키는 내용물을 0으로 채움(1바이트)
+	}
+
+	// 3) 각 인자 문자열의 주소 삽입
+	// 인자 문자열 삽입하면서 argv에 담아둔 각 문자열의 주소를 삽입한다.
+	for (int i = argc; i >= 0; i--) { // 
+        _if->rsp -= 8; // _if->rsp를 8 내림
+        if (i == argc) // i값이 argc값과 같으면
+            memset(_if->rsp, 0, 8); // _if->rsp에 0을 추가(sentinel 같은 느낌?)
+        else 
+            memcpy(_if->rsp, &arg_address[i], 8); // 나머지에는 arg_address 안에 들어있는 각 문자열의 주소를 스택에 삽입
+    }
+    
+	// 4) return address 삽입
+	// 다음 인스트럭션의 주소를 삽입해야 하는데, 지금은 프로세스를 생성하는 거라서 반환 주소가 없기 때문에 fake return address로 0을 추가한다.
+    _if->rsp -= 8; // _if->rsp를 8 내림
+	memset(_if -> rsp, 0, 8); // _if->rsp를 return address로 0을 추가
+
+	// 5) 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장
+	_if->R.rdi = argc; // rdi에 인자의 개수 저장
+    _if->R.rsi = _if->rsp + 8; // 스택에 마지막에 추가한 fake address를 담기 직전의 주소가 argv에 시작 주소로 설정되어 있으므로, rsi에 현재 스택 포인터 rsp에 8만큼 더한 값 저장
+}
+```
+- Parsing한 argument를 user stack에 쌓는 과정은 총 4단계로, 아래 표와 동일하게 쌓으면 된다.
+    | Address    | Name           | Data        | Type        |
+    |------------|----------------|-------------|-------------|
+    | 0x4747fffc | argv[3][...]   | 'bar\0'     | char[4]     |
+    | 0x4747fff8 | argv[2][...]   | 'foo\0'     | char[4]     |
+    | 0x4747fff5 | argv[1][...]   | '-l\0'      | char[3]     |
+    | 0x4747ffed | argv[0][...]   | '/bin/ls\0' | char[8]     |
+    | 0x4747ffe8 | word-align     | 0           | uint8_t[]   |
+    | 0x4747ffe0 | argv[4]        | 0           | char *      |
+    | 0x4747ffd8 | argv[3]        | 0x4747fffc  | char *      |
+    | 0x4747ffd0 | argv[2]        | 0x4747fff8  | char *      |
+    | 0x4747ffc8 | argv[1]        | 0x4747fff5  | char *      |
+    | 0x4747ffc0 | argv[0]        | 0x4747ffed  | char *      |
+    | 0x4747ffb8 | return address | 0           | void (*) () |
+    - RDI: 4 | RSI: 0x4747ffc0
+    - 1단계 : 프로그램 이름, 인자 문자열 삽입
+        - 스택은 아래 방향으로 성장하므로 스택에 인자를 추가할 때 문자열을 오른쪽에서 왼쪽 방향으로(역방향으로) 삽입해야 한다.
+    - 2단계 : word-align 패딩 삽입
+        - 각 문자열을 삽입하고, 8바이트 단위로 정렬하기 위해 필요한 만큼 패딩을 추가한다.
+    - 3단계 : 각 인자 문자열의 주소 삽입
+        - 인자 문자열 삽입하면서 argv에 담아둔 각 문자열의 주소를 삽입한다.
+    - 4단계 : return address 삽입
+        - 다음 인스트럭션의 주소를 삽입해야 하는데, 지금은 프로세스를 생성하는 거라서 반환 주소가 없기 때문에 fake return address로 0을 추가한다.
+    - 5단계 : 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장 -> 이 5단계를 나는 안해줘서 시스템 콜 구현하고 테스트할 때 처음부터 fail떠서 삽질 마이~ 했음...😑
+        - rdi에 인자의 개수 저장하고, 스택에 마지막에 추가한 fake address를 담기 직전의 주소가 argv에 시작 주소로 설정되어 있으므로, rsi에 현재 스택 포인터 rsp에 8만큼 더한 값 저장한다.
+```C
+/* userprog/process.c */
+/* 실행파일의 file_name을 적재해 실행하는 함수 */
+static bool load (const char *file_name, struct intr_frame *if_) {
+    . . . 
+
+    success = true;
+
+    argument_stack (argv, argc, if_);
+
+    . . .
+}
+```
+- parsing한 arguments를 user stack에 넣어주는 함수 구현을 완료하고, load() 함수에 추가해 준다.
+
+### Argument passing 테스트를 위해 wait 기능을 흉내내기 위한 process_wait() 함수 수정
+```C
+int process_wait (tid_t child_tid UNUSED) {
+	// argument passing 테스트를 위해 wait 기능을 흉내내기 위한 반복문 추가
+	for (int i = 0; i < 1000000000; i++) {
+
+	}
+
+	return -1;
+}
+```
+- 현재 핀토스에서는 프로세스가 종료될 때까지 대기하지 않고 바로 종료하기 때문에 반복문을 추가하여 프로세스가 종료될 때까지 대기하는 것 처럼 해줘야 한다.
+- 시스템 콜 구현하고 테스트 할 경우에는 200000000로 변경해야 한다. 시간이 너무 짧으면, fail 뜨는데 왜그런지는 모르겠다...
+
+### Argument passing 테스트를 위해 paring하여 argument를 넣은 user stack을 출력해주기 위한 load() 함수 수정
+```C
+/* 실행파일의 file_name을 적재해 실행하는 함수 */
+static bool load (const char *file_name, struct intr_frame *if_) {
+    . . .
+
+    success = true;
+
+	argument_stack (argv, argc, if_); // parsing한 arguments를 user stack에 넣어주는 argument_stack() 함수 호출
+	hex_dump(if_->rsp, if_->rsp, USER_STACK - if_->rsp, true); // user stack을 16진수로 출력해주기 위한 hex_dump() 함수 호출
+
+    . . .
+}
+```
+- Argument passing 테스트를 위해 paring하여 argument를 넣은 user stack을 출력해주기 위한 hex_dump() 함수를 추가해 준다.
+- hex_dump() 함수는 메모리의 내용을 16진수 형식으로 출력해줘서 스택에 저장된 값들을 확인할 수 있다.
+
+### Argument Passing 구현 후 결과
+```
+qemu-system-x86_64: warning: TCG doesn't support requested feature: CPUID.01H:ECX.vmx [bit 5]
+Kernel command line: -q -f put args-single run 'args-single onearg'
+0 ~ 9fc00 1
+100000 ~ ffe0000 1
+Pintos booting with: 
+        base_mem: 0x0 ~ 0x9fc00 (Usable: 639 kB)
+        ext_mem: 0x100000 ~ 0xffe0000 (Usable: 260,992 kB)
+Calibrating timer...  157,081,600 loops/s.
+hd0:0: detected 313 sector (156 kB) disk, model "QEMU HARDDISK", serial "QM00001"
+hd0:1: detected 20,160 sector (9 MB) disk, model "QEMU HARDDISK", serial "QM00002"
+hd1:0: detected 102 sector (51 kB) disk, model "QEMU HARDDISK", serial "QM00003"
+Formatting file system...done.
+Boot complete.
+Putting 'args-single' into the file system...
+Executing 'args-single onearg':
+000000004747ffc0                          00 00 00 00 00 00 00 00 |        ........|
+000000004747ffd0  ed ff 47 47 00 00 00 00-f9 ff 47 47 00 00 00 00 |..GG......GG....|
+000000004747ffe0  00 00 00 00 00 00 00 00-00 00 00 00 00 61 72 67 |.............arg|
+000000004747fff0  73 2d 73 69 6e 67 6c 65-00 6f 6e 65 61 72 67 00 |s-single.onearg.|
+system call!
+Execution of 'args-single' complete.
+Timer: 191 ticks
+Thread: 30 idle ticks, 153 kernel ticks, 9 user ticks
+hd0:0: 0 reads, 0 writes
+hd0:1: 80 reads, 232 writes
+hd1:0: 102 reads, 0 writes
+Console: 1169 characters output
+Keyboard: 0 keys pressed
+Exception: 0 page faults
+Powering off...
+```
+
+## 4. System Call 구현
+### 목표 🎯
+시스템 콜 핸들러가 구현되어 있지 않아 시스템 콜이 호출될 수 없으므로 응용 프로그램이 정상적으로 작동하지 않는 현재 핀토스에서 시스템 콜을 구현하여 응용 프로그램이 정상적으로 작동하도록 하는 것이다.
+
+### 전체적인 시스템 콜 호출 과정 파악
+1. 현재 핀토스에서의 시스템 콜 호출 과정을 한 단계씩 살펴보자.
+    - 1단계 : 유저 프로그램에서 특정 작업을 수행하는 시스템 콜을 호출한다.<br><br>
+    - 2단계 : 시스템 호출을 위해 호출한 시스템 콜 번호와 추가 인수에 해당하는 syscall을 호출한다.
+        - syscall은 include/lib/user/syscall.c에 각 시스템 콜 번호와 추가 인수에 해당하는 syscall이 위와 같이 정의되어 있다.
+            ```C
+            /* Invokes syscall NUMBER, passing no arguments, and returns the
+            return value as an `int'. */
+            #define syscall0(NUMBER) ( \
+                    syscall(((uint64_t) NUMBER), 0, 0, 0, 0, 0, 0))
+
+            /* Invokes syscall NUMBER, passing argument ARG0, and returns the
+            return value as an `int'. */
+            #define syscall1(NUMBER, ARG0) ( \
+                    syscall(((uint64_t) NUMBER), \
+                        ((uint64_t) ARG0), 0, 0, 0, 0, 0))
+            /* Invokes syscall NUMBER, passing arguments ARG0 and ARG1, and
+            returns the return value as an `int'. */
+            #define syscall2(NUMBER, ARG0, ARG1) ( \
+                    syscall(((uint64_t) NUMBER), \
+                        ((uint64_t) ARG0), \
+                        ((uint64_t) ARG1), \
+                        0, 0, 0, 0))
+
+            #define syscall3(NUMBER, ARG0, ARG1, ARG2) ( \
+                    syscall(((uint64_t) NUMBER), \
+                        ((uint64_t) ARG0), \
+                        ((uint64_t) ARG1), \
+                        ((uint64_t) ARG2), 0, 0, 0))
+
+            #define syscall4(NUMBER, ARG0, ARG1, ARG2, ARG3) ( \
+                    syscall(((uint64_t *) NUMBER), \
+                        ((uint64_t) ARG0), \
+                        ((uint64_t) ARG1), \
+                        ((uint64_t) ARG2), \
+                        ((uint64_t) ARG3), 0, 0))
+
+            #define syscall5(NUMBER, ARG0, ARG1, ARG2, ARG3, ARG4) ( \
+                    syscall(((uint64_t) NUMBER), \
+                        ((uint64_t) ARG0), \
+                        ((uint64_t) ARG1), \
+                        ((uint64_t) ARG2), \
+                        ((uint64_t) ARG3), \
+                        ((uint64_t) ARG4), \
+                        0))
+            ```
+        - 각 시스템 콜은 서로 다른 시스템 번호와 인자를 사용하는 데 사용하는 syscall 형식 또한 다 다르며, 너무 많기 때문에 몇 가지만 어떻게 정의되어 있는지 아래 코드를 확인해보자.
+            ```C
+            void halt (void) {
+                syscall0 (SYS_HALT);
+                NOT_REACHED ();
+            }
+
+            void exit (int status) {
+                syscall1 (SYS_EXIT, status);
+                NOT_REACHED ();
+            }
+
+            pid_t fork (const char *thread_name){
+                return (pid_t) syscall1 (SYS_FORK, thread_name);
+            }
+
+            int exec (const char *file) {
+                return (pid_t) syscall1 (SYS_EXEC, file);
+            }
+            ```
+            - 예를 들어, fork()는 syscall1 형식을 사용하고 호출하며, 인자로는 fork의 시스템 콜 번호와 스레드 이름을 받는다.
+        - 여기서 추가로 알아야 할 것은 각 시스템 콜 번호이며, include/lib/syscall-nr.h에 아래와 같이 enum으로 정의되어 있다.
+            ```C
+            /* System call numbers. */
+            enum {
+                /* Projects 2 and later. */
+                SYS_HALT,                   /* Halt the operating system. */
+                SYS_EXIT,                   /* Terminate this process. */
+                SYS_FORK,                   /* Clone current process. */
+                SYS_EXEC,                   /* Switch current process. */
+                SYS_WAIT,                   /* Wait for a child process to die. */
+                SYS_CREATE,                 /* Create a file. */
+                SYS_REMOVE,                 /* Delete a file. */
+                SYS_OPEN,                   /* Open a file. */
+                SYS_FILESIZE,               /* Obtain a file's size. */
+                SYS_READ,                   /* Read from a file. */
+                SYS_WRITE,                  /* Write to a file. */
+                SYS_SEEK,                   /* Change position in a file. */
+                SYS_TELL,                   /* Report current position in a file. */
+                SYS_CLOSE,                  /* Close a file. */
+
+                /* Project 3 and optionally project 4. */
+                SYS_MMAP,                   /* Map a file into memory. */
+                SYS_MUNMAP,                 /* Remove a memory mapping. */
+
+                /* Project 4 only. */
+                SYS_CHDIR,                  /* Change the current directory. */
+                SYS_MKDIR,                  /* Create a directory. */
+                SYS_READDIR,                /* Reads a directory entry. */
+                SYS_ISDIR,                  /* Tests if a fd represents a directory. */
+                SYS_INUMBER,                /* Returns the inode number for a fd. */
+                SYS_SYMLINK,                /* Returns the inode number for a fd. */
+
+                /* Extra for Project 2 */
+                SYS_DUP2,                   /* Duplicate the file descriptor */
+
+                SYS_MOUNT,
+                SYS_UMOUNT,
+            };
+            ```
+            - 여기서 fork() 시스템 콜 번호는 2인 것을 알 수 있다.<br><br>
+    - 3단계 : 각 시스템 콜에 해당하는 syscall이 호출되면, 아래의 syscall() 함수를 호출하여 인자로 받은 값들을 레지스터에 순서대로 삽입하고 syscall을 실행한다.
+        ```C
+        __attribute__((always_inline))
+        static __inline int64_t syscall (uint64_t num_, uint64_t a1_, uint64_t a2_,
+                uint64_t a3_, uint64_t a4_, uint64_t a5_, uint64_t a6_) {
+            int64_t ret;
+            register uint64_t *num asm ("rax") = (uint64_t *) num_;
+            register uint64_t *a1 asm ("rdi") = (uint64_t *) a1_;
+            register uint64_t *a2 asm ("rsi") = (uint64_t *) a2_;
+            register uint64_t *a3 asm ("rdx") = (uint64_t *) a3_;
+            register uint64_t *a4 asm ("r10") = (uint64_t *) a4_;
+            register uint64_t *a5 asm ("r8") = (uint64_t *) a5_;
+            register uint64_t *a6 asm ("r9") = (uint64_t *) a6_;
+
+            __asm __volatile(
+                    "mov %1, %%rax\n"
+                    "mov %2, %%rdi\n"
+                    "mov %3, %%rsi\n"
+                    "mov %4, %%rdx\n"
+                    "mov %5, %%r10\n"
+                    "mov %6, %%r8\n"
+                    "mov %7, %%r9\n"
+                    "syscall\n"
+                    : "=a" (ret)
+                    : "g" (num), "g" (a1), "g" (a2), "g" (a3), "g" (a4), "g" (a5), "g" (a6)
+                    : "cc", "memory");
+            return ret;
+        }
+        ```
+        - fork() 시스템 콜 함수는 syscall1이며, 시스템 콜 번호와 스레드 이름을 인자로 가진 함수이다.
+        - 따라서, syscall() 함수에서 레지스터에 시스템 콜 번호는 rax, 스레드 이름은 rdi에 넣고, 나머지 값은 모두 0으로 채운다.
+        - 여기서, 레지스터에 각 인자를 넣는 순서에 대해 알아보자.
+            - %rax는 시스템 호출 번호입니다.
+            - 네 번째 인수는 %rcx가 아닌 %r10입니다.
+            - 즉, 레지스터에 인자를 넣는 순서는 %rax, %rdi, %rsi, %rdx, %r10, %r8, %r9이다.
+            - 따라서, 시스템 호출 핸들러 syscall_handler()가 제어권을 얻으면 시스템 호출 번호는 rax에 있고 인수는 %rdi, %rsi, %rdx, %r10, %r8, %r9의 순서로 전달됩니다.<br><br>
+    - 4단계 : syscall이 실행되면, syscall-entry가 실행된다.
+        - syscall이 실행되면, 아래와 같이 init.c의 main() 함수를 통해 핀토스가 실행되면서 syscall_init() 함수가 호출되고 syscall-entry() 함수가 실행된다.
+            ```C
+            /* Pintos main program. */
+            int
+            main (void) {
+                . . .
+
+                syscall_init ();
+
+                . . .
+            }
+            ```
+            ```C
+            void
+            syscall_init (void) {
+                write_msr(MSR_STAR, ((uint64_t)SEL_UCSEG - 0x10) << 48  |
+                        ((uint64_t)SEL_KCSEG) << 32);
+                write_msr(MSR_LSTAR, (uint64_t) syscall_entry);
+
+                /* The interrupt service rountine should not serve any interrupts
+                * until the syscall_entry swaps the userland stack to the kernel
+                * mode stack. Therefore, we masked the FLAG_FL. */
+                write_msr(MSR_SYSCALL_MASK,
+                        FLAG_IF | FLAG_TF | FLAG_DF | FLAG_IOPL | FLAG_AC | FLAG_NT);
+            }
+            ```
+            - syscall_init() 함수가 호출되면, write_msr() 함수가 호출된다.
+            - write_msr() 함수에서 MSR_LSTAR라는 레지스터에 syscall_entry() 함수의 주소값을 넣어주고 초기화를 시켜준다.
+            - 유저가 시스템 콜을 요청하면, 어셈블리어로 구성된 syscall_entry.S 파일로 이동하여 syscall_entry() 함수가 실행된다.
+            - 그 이유는 syscall_entry.S 파일에 아래와 같이 syscall_entry() 함수가 선언되어 있기 때문이다.
+                ```
+                .globl syscall_entry
+                .type syscall_entry, @function
+                ```
+            - 그러면 MSR_LSTAR 레지스터는 어디서 접근하여 syscall_entry.S 파일로 이동하고 syscall_entry() 함수를 실행시키는 것일까???🧐🧐🧐
+        - syscall-entry() 함수가 호출되면, 아래와 같이 어셈블리어로 구성된 userprog/syscall-entry.S로 이동한다.
+            ```C
+            #include "threads/loader.h"
+
+            .text
+            .globl syscall_entry
+            .type syscall_entry, @function
+            syscall_entry:
+                movq %rbx, temp1(%rip)
+                movq %r12, temp2(%rip)     /* callee saved registers */
+                movq %rsp, %rbx            /* Store userland rsp    */
+                movabs $tss, %r12
+                movq (%r12), %r12
+                movq 4(%r12), %rsp         /* Read ring0(커널 모드를 지칭하며, ring3은 유저 모드를 지칭) rsp from the tss */
+                /* Now we are in the kernel stack */
+                push $(SEL_UDSEG)      /* if->ss */
+                push %rbx              /* if->rsp */
+                push %r11              /* if->eflags */
+                push $(SEL_UCSEG)      /* if->cs */
+                push %rcx              /* if->rip */
+                subq $16, %rsp         /* skip error_code, vec_no */
+                push $(SEL_UDSEG)      /* if->ds */
+                push $(SEL_UDSEG)      /* if->es */
+                push %rax
+                movq temp1(%rip), %rbx
+                push %rbx
+                pushq $0
+                push %rdx
+                push %rbp
+                push %rdi
+                push %rsi
+                push %r8
+                push %r9
+                push %r10
+                pushq $0 /* skip r11 */
+                movq temp2(%rip), %r12
+                push %r12
+                push %r13
+                push %r14
+                push %r15
+                movq %rsp, %rdi
+
+            check_intr:
+                btsq $9, %r11          /* Check whether we recover the interrupt */
+                jnb no_sti
+                sti                    /* restore interrupt */
+            no_sti:
+                movabs $syscall_handler, %r12
+                call *%r12
+                popq %r15
+                popq %r14
+                popq %r13
+                popq %r12
+                popq %r11
+                popq %r10
+                popq %r9
+                popq %r8
+                popq %rsi
+                popq %rdi
+                popq %rbp
+                popq %rdx
+                popq %rcx
+                popq %rbx
+                popq %rax
+                addq $32, %rsp
+                popq %rcx              /* if->rip */
+                addq $8, %rsp
+                popq %r11              /* if->eflags */
+                popq %rsp              /* if->rsp */
+                sysretq				   /* 유저 모드로 복귀 */
+
+            .section .data
+            .globl temp1
+            temp1:
+            .quad	0
+            .globl temp2
+            temp2:
+            .quad	0
+            ```
+            - syscall-entry.S에서는 인터럽트 프레임 구조체에 있던 값을 레지스터에 옮기고 계산하는 작업을 수행한다.
+            - 여기서 우리가 살펴봐야 할 부분은 아래와 같다.
+                ```C
+                movabs $tss, %r12
+                movq (%r12), %r12
+                movq 4(%r12), %rsp         /* Read ring0 rsp from the tss */
+                ```
+                - movq 명렁어는 데이터를 이동시키는 명령어로, 형식은 다음과 같다.
+                    - movq Source, Dest : Source에 해당하는 값을 Dest가 나타내는 공간에 이동(저장)시킨다는 의미이다.
+                - movabs $tss, %r12 명령어를 수행한다.
+                    - 우리는 커널 스택 포인터를 찾아야 한다.
+                    - 아래에서 할 작업이 커널을 호출하여 커널 스택에 push & pop을 수행하는데, 그러기 위해서 커널 스택을 가리키고 있는 포인터를 알아야 하기 때문이다.
+                    - 이 명령어를 통해 우리는 커널 스택 포인터를 찾을 수 있다.
+                - movq 4(%r12), %rsp 명령어를 수행한다.
+                    - 이 명령어를 통해 tss에 있는 값인 커널 스텍 포인터 값을 %rsp에 넣는다.
+                    - 이제 우리는 커널 스택 포인터로 이동할 수 있게 되었고, 이때부터 rsp는 유저 스택이 아닌 커널 스택을 가리키게 되면서 커널 모드를 시작할 수 있다.
+                - 위 과정을 요약하면, CPU의 rsp 값에 tss에 저장된 커널 스택의 스택 포인터를 저장한다는 의미이다.
+                - 위 명령어를 모두 실행한 후, CPU 레지스터 값들을 커널 스택에 push한다.
+                    - push되는 순서는 마지막에 들어간 데이터부터 interrupt frame 구조체 순서가 되도록 push한다.
+                - 다음으로는 movabs $syscall_handler, %r12 명령어를 실행하여 $syscall_handler값을 %r12에 저장하고, call *%r12 명령어를 사용하여 syscall_handler() 함수를 호출한다.<br><br>
+    - 5단계 : syscall_handler(struct intr_frame *f) 함수가 호출되고, 시스템 콜을 수행하는 함수를 호출한다.
+        - 인자로 들어온 f는 커널스택의 rsp이다.
+        - rsp부터는 intr_frame 형태의 데이터들이 순차적으로 들어가 있으므로 이 자체를 인터럽트 프레임처럼 사용할 수 있는 것이다.
+        - 즉, f의 rax(시스템 콜 번호) 값을 통해 필요한 시스템 콜을 수행하는 함수를 아래와 같이 호출한다.
+            ```C
+            void
+            syscall_handler (struct intr_frame *f UNUSED) {
+                switch() {
+                    case SYS_HALT :
+                        halt ();
+                        break;
+                    case SYS_EXIT :
+                        exit ();
+                        break;
+                    case SYS_FORK :
+                        fork ();
+                        break;
+                    case SYS_EXEC :
+                        exec ();
+                        break;
+                    case SYS_WAIT :
+                        wait ();
+                        break;
+                    case SYS_CREATE :
+                        create ();
+                        break;
+                    case SYS_REMOVE :
+                        remove ();
+                        break;
+                    case SYS_OPEN :
+                        open ();
+                        break;
+                    case SYS_FILESIZE :
+                        filesize ();
+                        break;
+                    case SYS_READ :
+                        read ();
+                        break;
+                    case SYS_WRITE :
+                        write ();
+                        break;
+                    case SYS_SEEK :
+                        seek ();
+                        break;
+                    case SYS_TELL :
+                        tell ();
+                        break;
+                    case SYS_CLOSE :
+                        close ();
+                        break;
+                    default :
+                        /* call thread_exit function; */
+                }
+
+                printf ("system call!\n");
+                thread_exit ();
+            }
+            ```
+            - 아직 구현하기 전이라 틀만 잡아 놓은 상태이다.
+            - 모든 함수가 구현되면, 유저 프로그램에서 호출한 시스템 콜 함수가 호출되어 실행될 것이다.
+            - 모든 작업이 완료되면, syscall-entry.S에서 sysretq 명령어가 실행되어 유저 모드로 복귀한다.<br><br>
+    - 여기까지가 핀토스에서 유저 프로그램이 시스템 콜을 호출하는 전체적인 과정이다(휴... 힘들다😅).
+
+### 현재 핀토스에서의 메모리 구성 파악
+- 현재 핀토스에서의 메모리 구성을 살펴보자.
+```C
+^                     +----------------------------------+
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+KENEL VIRTUAL MEMORY  |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+v                     |                                  |
+^                     +----------------------------------+ KERN_BASE(0x8004000000)
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  | -> file mapped page(PROJECT3에서 사용)
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     +----------------------------------+ USER_STACK(0x47480000)
+|                     |             user stack           |
+|                     |                 |                |
+|                     |                 |                |
+|                     |                 V                |
+|                     |           grows downward         |
+USER VIRTUAL MEMORY   |                                  |
+|                     |           grows upward           |
+|                     |                 ^                |
+|                     |                 |                |
+|                     |                 |                |
+|                     +----------------------------------+
+|                     | uninitialized data segment (BSS) |
+|                     +----------------------------------+
+|                     |     initialized data segment     |
+|                     +----------------------------------+
+|                     |            code segment          |
+|            0x400000 +----------------------------------+
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+|                     |                                  |
+v                0x00 +----------------------------------+
+```
+
+### 잘못된 메모리 액세스를 처리하는 함수 구현
+- check_address() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 주소 값이 유저 영역에서 사용하는 주소 값인지 확인 하는 함수 */
+    /* 주소유효성 겸사 : 포인터가 가리키는 주소가 사용자 영역(0x8048000~0xc0000000)인지 확인 */
+    /* 유저 영역을 벗어난 영역인 경우 프로세스 종료(exit(-1)) */
+    void check_address (void *addr) {
+        // 현재 접근하는 메모리 주소가 NULL이거나, 커널 영역에서 사용하는 주소이거나, 유저 영역에서 사용하는 주소이지만 페이지로 할당되지 않은 주소일 경우(=잘못된 접근)
+        if (addr == NULL || is_kernel_vaddr(addr) || pml4_get_page (thread_current ()->pml4, addr) == NULL) {
+            exit(-1); // 프로세스 종료
+        }
+    }
+    ```
+    - 우리는 GitBook Accesing User Memory 부분의 내용과 같이 잘못된 메모리에 액세스 했을 때 처리해야 한다.
+        - 처리하는 방법은 두 가지가 있으며, 지금은 첫 번째 방법을 사용할 것이다.
+        - 첫 번째 방법은 사용자가 제공한 포인터의 유효성을 확인한 다음 잘못된 메모리에 액세스 했을 경우 포인터를 참조 해제하는 것이다.<br><br>
+- 그러면 구현한 check_address() 함수를 살펴보자.
+    - 여기서는 이미 정의된 두 개의 함수를 사용하여 구현할 수 있다.
+    - is_kernel_vadder() 함수는 인자로 받아온 주소가 커널 가상 주소이면 true를 반환한다.
+        ```C
+        /* include/threads/vaddr.h*/
+        /* Returns true if VADDR is a kernel virtual address. */
+        #define is_kernel_vaddr(vaddr) ((uint64_t)(vaddr) >= KERN_BASE)
+        ```
+    - pml4_get_page() pml4에서 유저 가상 주소에 해당하는 물리적 주소를 찾으며, 해당 물리적 주소에 해당하는 커널 가상 주소가 매핑되지 않은 경우 널 포인터를 반환한다.
+        ```C
+        /* threads/mmu.c */
+        /* pml4에서 사용자 가상 주소 UADDR에 해당하는 물리적 주소를 찾습니다. */
+        /* 해당 물리적 ​​주소에 해당하는 커널 가상 주소 또는 UADDR이 매핑되지 않은 경우 널 포인터를 반환합니다. */
+        void *
+        pml4_get_page (uint64_t *pml4, const void *uaddr) {
+            ASSERT (is_user_vaddr (uaddr));
+
+            uint64_t *pte = pml4e_walk (pml4, (uint64_t) uaddr, 0);
+
+            if (pte && (*pte & PTE_P))
+                return ptov (PTE_ADDR (*pte)) + pg_ofs (uaddr);
+            return NULL;
+        }
+        ```
+- 위 두 함수를 이용하여 현재 접근하는 메모리 주소가 커널 영역에서 사용하는 주소이거나, 유저 영역에서 사용하는 주소이지만 페이지로 할당되지 않은 주소일 경우에는 잘못된 메모리 접근이므로 프로세스를 종료한다.
+
+### 시스템 콜 핸들러 함수 수정
+- 호출된 시스템 콜의 번호에 해당하는 각 시스템 콜 함수를 호출해줄 수 있도록 switch 문으로 시스템 콜 핸들러 함수를 다음과 같이 수정한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 시스템 콜 인터페이스 메인 함수 */
+    void syscall_handler (struct intr_frame *f UNUSED) {
+        int system_call_number = f->R.rax; // 호출한 시스템 콜 번호를 저장하는 변수 선언
+        switch(system_call_number) {
+            case SYS_HALT :
+                halt ();
+                break;
+            case SYS_EXIT :
+                exit (f->R.rdi);
+                break;
+            case SYS_FORK :
+                f->R.rax = fork (f->R.rdi, f);
+                break;
+            case SYS_EXEC :
+                f->R.rax = exec(f->R.rdi);
+                break;
+            case SYS_WAIT :
+                f->R.rax = wait (f->R.rdi);
+                break;
+            case SYS_CREATE :
+                f->R.rax = create (f->R.rdi, f->R.rsi);
+                break;
+            case SYS_REMOVE :
+                f->R.rax = remove (f->R.rdi);
+                break;
+            case SYS_OPEN :
+                f->R.rax = open (f->R.rdi);
+                break;
+            case SYS_FILESIZE :
+                f->R.rax = filesize (f->R.rdi);
+                break;
+            case SYS_READ :
+                f->R.rax = read (f->R.rdi, f->R.rsi, f->R.rdx);
+                break;
+            case SYS_WRITE :
+                f->R.rax = write (f->R.rdi, f->R.rsi, f->R.rdx);
+                break;
+            case SYS_SEEK :
+                seek (f->R.rdi, f->R.rsi);
+                break;
+            case SYS_TELL :
+                f->R.rax = tell (f->R.rdi);
+                break;
+            case SYS_CLOSE :
+                close (f->R.rdi);
+                break;
+            default :
+                exit (-1);
+                break;
+        }
+
+        // printf ("system call!\n");
+        // thread_exit ();
+    }
+    ```
+    - 구현한 시스템 콜 함수를 테스트하기 위해 지금은 pirntf 문과 thread_exit() 함수를 주석처리 해준다.
+
+### 구현된 시스템 콜 함수를 테스트 하기 위한 WRITE 시스템 콜 함수 간단 구현
+- write() 함수를 임시로 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일의 데이터를 기록하는 시스템 콜 함수 */
+    int write (int fd, const void *buffer, unsigned size) {
+        // fd가 1이면, putbuf() 함수를 이용하여 한 번 호출하여 가능한 모든 buffer 데이터를 한 번에 콘솔에 쓰기
+        if (fd == 1) {
+            putbuf (buffer, size); 
+        }
+        return size;
+    }
+    ```
+    - 현재는 단순히 구현한 시스템 콜 함수를 테스트하기 위해 fd가 1이면, putbuf() 함수를 이용하여 한 번 호출하여 가능한 모든 buffer 데이터를 한 번에 콘솔에 쓰기 작업을 수행할 수 있도록만 코드를 추가한다.
+
+### 핀토스를 종료시키는 HALT 시스템 콜 함수 구현
+- halt() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 핀토스 종료 시스템 콜 함수 */
+    void halt (void) {
+        power_off (); // HALT 시스템 콜 호출 시, init.c의 power_off() 함수로 핀토스를 종료
+    }
+    ```
+    - HALT 시스템 콜 호출 시, power_off() 함수를 호출하여 핀토스를 종료한다.
+
+### 현재 프로세스를 종료시키는 EXIT 시스템 콜 함수 구현
+- exit() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 현재 프로세스를 종료시키는 시스템 콜 함수 */
+    void exit (int status) {
+        struct thread *cur = thread_current (); // 실행중인 현재 스레드 구조체를 curr에 저장
+        cur->exit_status = status; // 현재 스레드 종료 상태 저장(0이면 정상 종료)
+        printf("%s: exit(%d)", thread_name (), status); // 프로세스 종료 메시지 출력
+        thread_exit(); // 스레드 종료
+    }
+    ```
+    - EXIT 시스템 콜 호출 시, 현재 실행중인 스레드의 구조체를 받아 해당 스레드 종료 상태를 저장한다.
+        - 스레드 종료 상태를 저장하는 변수인 exit_status는 include/threads/thread.h에서 스레드 구조체에 int형으로 선언해 준다.
+        - status 값이 0이면, 정상 종료 상태이다.
+    - 스레드 종료 상태를 저장하고, 프로세스 종료 메시지를 출력해준 다음 thread_exit() 함수를 이용하여 스레드를 종료한다.
+
+### 자식 프로세스를 생성하고 실행시키는 FORK 시스템 콜 함수 구현
+- 우선, 현재 핀토스에서의 프로세스 구조체에는 부모와 자식 관계를 나타내는 코드가 없다.
+    - 즉, 부모와 자식의 구분이 없고 자식 프로세스의 정보를 알지 못하므로, 자식의 시작 또는 종료되기 전에 부모 프로세스가 종료된다.
+    - 이때, FORK 시스템 콜 함수를 이용하여, 부모 프로세스를 복제해서 자식 프로세스를 생성하고 실행시킬 수 있도록 구현해야 한다.<br><br>
+- 근데 왜 부모 프로세스를 복제하여 자식 프로세스를 생성하는 이유는 무엇일까?🤔
+    - 프로세스를 생성하는 과정이 간단하지 않아, 프로세스를 생성하고 관련된 많은 자료 구조들을 다 새로 만드는 것보다 기존에 생성된 프로세스의 자료 구조를 복사하는 것이 더 효율적이기 때문이다.
+    - 새로 생성된 프로세스의 엔트리 포인트에 대한 것 때문이기도 하다.
+        - 일반적으로 프로그램이 실행될 때 메인 함수를 엔트리 포인트로 하는데, 새로 프로세스가 셍성될 때마다 메인 함수부터 시작하는 것을 매우 비효율적이다.
+        - 따라서, 부모 프로세스를 복제하면 부모 프로세스가 호출한 시점을 엔트리 포인트로 가지므로, 발생하는 여러 문제를 해결할 수 있다.<br><br>
+```C
+- fork() 함수를 다음과 같이 구현한다.
+```C
+/* userprog/syscall.c */
+/* 자식 프로세스를 복제하고 실행시키는 시스템 콜 함수 */
+tid_t
+fork(const char *thread_name, struct intr_frame *f) {
+	return process_fork(thread_name, f); // 현재 프로세스를 복제하는 process_fork() 함수 호출
+}
+```
+- FORK 시스템 콜 함수가 호출되면, 현재 프로세스를 복제하는 process_fork() 함수를 호출한다.<br><br>
+- process_fork() 함수를 구현하기 위해 몇 가지 작업이 필요하다.
+    - 우선적으로 if_를 복사하기 위한 현재 스레드의 parent_if 구조체를 선언한다.
+        ```C
+        /* include/threads/thread.h */
+        struct intr_frame parent_if; // 현재 스레드 if_ 선언
+        ```
+    - 새로 생성되는 스레드를 현재 실행중인 스레드의 자식으로 지정하기 위해 자식 리스트를 설정하기 위한 child_list와 child_elem를 선언하고 초기화한다.
+        ```C
+        /* include/threads/thread.h */
+        struct list child_list; // 자식 리스트 선언
+        struct list_elem child_elem; // 자식 리스트 element 선언
+        ```
+    - 자식이 로드될 때까지 대기하기 위해서 방금 생성한 자식 스레드를 자식 리스트에서 검색하는 get_child_process() 함수를 다음과 같이 구현한다.
+        ```C
+        /* userprog/process.c */
+        /* 자식이 로드될 때까지 대기하기 위해서 방금 생성한 자식 스레드를 자식 리스트에서 검색하는 함수 */
+        struct thread *get_child_process (int pid) {
+            struct thread *cur = thread_current (); // 현재 스레드 저장
+            struct list *child_list = &cur->child_list; // 현재 스레드가 있는 자식 리스트 저장
+
+            // 자식 리스트에서 순차적으로 새로 생성한 스레드 검색
+            for (struct list_elem *e = list_begin (child_list); e != list_end (child_list); e = list_next (e)) {
+                struct thread *t = list_entry (e, struct thread, child_elem); // list_entry() 함수를 이용하여, 새로 생성된 정확한 스레드 검색
+
+                // 검색한 스레드의 id가 새로 생성한 스레드의 id와 같은 경우 해당 스레드 반환(해당 스레드가 새로 생성한 스레드)
+                if (t->tid == pid)
+                    return t;
+            }
+
+            // 자식 리스트에 새로 생성한 스레드가 존재하지 않는 경우 NULL 반환
+            return NULL;
+        }
+        ```
+        - 자식이 로드될 때까지 대기하기 위해서 방금 생성한 자식 스레드를 자식 리스트에서 검색하는 get_child_process() 함수를 구현하기 위해 먼저 선언한다.
+        - get_child_process() 함수에서 자식 리스트를 순차적으로 검색하면서 새로 생성한 스레드를 찾는다.
+        - 검색한 스레드의 id가 새로 생성한 스레드의 id와 같은 경우 해당 스레드를 반환하고, 자식 리스트에 새로 생성한 스레드가 존재하지 않는 경우 NULL을 반환한다.
+    - 부모와 자식이 작업 실행과 종료 등의 상태를 시그널을 서로 주고받을 수 있도록 세마포어를 선언하고 초기화한다.
+        ```C
+         /* include/threads/thread.h */
+        struct semaphore load_sema; // 현재 스레드가 load되는 동안 부모를 대기시키기 위한 세마포어 선언
+        struct semaphore exit_sema; // 자식 스레드가 종료되고 스케줄링이 이어질 수 있도록 부모에게 시그널 보내기 위한 세마포언 선언 
+        struct semaphore wait_sema; // 자식 스레드가 종료될 때까지 대기하고 있는 부모에게 자식 스레드가 작업을 종료했다는 시그널을 보내기 위한 세마포어 선언
+        ```
+        - 주석은 참고만 하고, 상황에 따라 사용하는 용도가 다르므로 그때마다 해석하는게 좋다.
+    - 이제 process_fork() 함수를 수정하기 위한 준비가 되었고, 구현을 시작해보자.<br><br>
+- 현재 프로세스를 복제하는 process_fork() 함수를 살펴보자.
+    ```C
+    /* userprog/process.c */
+    /* 현재 프로세스를 복제하여 name이라는 이름의 새로운 프로세스를 만들고, 그 프로세스의 스레드 id를 반환한다.
+    만약, 스레드 생성에 실패하면 TID_ERROR를 반환한다. */
+    /* 현재 프로세스를 복제하는 함수 */
+    tid_t process_fork (const char *name, struct intr_frame *if_ UNUSED) {
+        // 현재 스레드의 parent_if에 복제해야 하는 if_ 복사
+        struct thread *cur = thread_current ();
+        memcpy (&cur->parent_if, if_, sizeof(struct intr_frame));
+
+        // __do_fork() 함수를 이용하여 현재 스레드를 복제한 새로운 스레드 생성하고, 생성된 스레드의 id인 tid를 반환
+        tid_t tid = thread_create (name, PRI_DEFAULT, __do_fork, cur);
+        
+        // 반환된 tid가 TID_ERROR인 경우 TID_ERROR 반환(=스레드가 제대로 생성되지 않은 경우)
+        if (tid == TID_ERROR)
+            return TID_ERROR;
+
+        // 자식이 로드될 때까지 대기하기 위해서 방금 생성한 자식 스레드 검색
+        struct thread *child = get_child_process (tid);
+        
+        sema_down (&child->load_sema); // 자식이 로드가 완료될 때까지 부모는 대기
+
+        // 자식이 로드되다가 오류로 exit한 경우
+        if (child->exit_status == -2)
+        {
+            list_remove (&child->child_elem); // 자식이 종료되었으므로 자식 리스트에서 제거
+            sema_up (&child->exit_sema); // 자식이 종료되고 스케줄링이 이어질 수 있도록 부모에게 시그널 전송
+            return TID_ERROR; // TID_ERROR 반환
+        }
+
+        return tid; // 자식이 성공적으로 로드된 경우 자식의 tid 반환
+    }
+    ```
+    - 현재 프로세스를 복제하기 위해 현재 스레드의 parent_if에 복제해야 하는 if_를 복사한다.
+    - __do_fork() 함수를 이용하여 현재 스레드를 복제한 새로운 스레드 생성하고, 생성된 스레드의 id인 tid를 반환한다.
+        - 이때, 새로운 스레드 생성에 실패하면 TID_ERROR를 반환한다.
+    - 새로운 스레드가 정상적으로 생성되었다면, 새로 생성된 스레드(=자식)가 로드될 때까지 대기하기 위해 get_child_process() 함수를 통해 자식 리스트에서 해당 스레드를 찾는다.
+    - 자식 스레드를 잘 찾았다는 가정하에, 자식이 로드가 완료될 때까지 부모를 대기시킨다.
+    - 자식이 어떤 오류로 인해 load에 실패하면, 자식이 종료되었으므로 자식 리스트에서 제거하고, 다음 스케줄링이 이어질 수 있도록 부모에게 시그널을 전송한 후에 TID_ERROR를 반환한다.
+    - 만약, 자식이 정상적으로 load에 성공하였다면, 자식 스레드의 id인 tid를 반환한다.<br><br>
+- 현재 스레드를 복제하는 __do_fork() 함수를 살펴보자.
+    ```C
+    /* userprog/process.c */
+    static void __do_fork (void *aux) {
+        . . .
+
+        parent_if = &parent->parent_if; // 인자로 전달 받은 부모 스레드의 parent_if 필드의 값을 parent_if에 할당
+        
+        . . .
+
+        if_.R.rax = 0; // 자식 프로세스의 리턴값 0으로 초기화
+
+        . . .
+
+        // file_duplicate() 함수를 이용하여 파일 디스크립터 테이블 복사
+        for (int i = 0; i < FD_COUNT_LIMIT; i++) {
+            struct file *file = parent->fdt[i];
+            if (file == NULL)
+                continue;
+            if (file > 2)
+                file = file_duplicate (file);
+            current->fdt[i] = file;
+        }
+        current->fd_idx = parent->fd_idx;
+
+        // 자식이 로드가 완료될 때까지 기다리고 있던 부모 대기 해제
+        sema_up (&current->load_sema);
+        process_init ();
+
+        /* Finally, switch to the newly created process. */
+        if (succ)
+            do_iret (&if_);
+    error:
+        sema_up (&current->load_sema);
+        exit (-2);
+    }
+    ```
+    - 인자로 전달 받은 부모 스레드의 parent_if 필드의 값을 parent_if에 할당해 준다.
+    - 자식 프로세스의 리턴값을 0으로 초기화 한다.
+    - file_duplicate() 함수를 이용하여 부모 파일 디스크립터 테이블을 복사한다.
+    - 파일 디스크립터 테이블 복사가 완료되면, 자식이 로드가 완료될 때까지 기다리고 있는 부모를 대기 해제하고 프로세스를 초기화한다.
+    - 만약, 실패하면 자식을 종료한다.<br><br>
+- 페이지 테이블을 복제하는 데 사용하는 함수인 duplicate_pte() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/process.c */
+    /* 페이지 테이블을 복제하는 데 사용되는 함수 */
+    static bool
+    duplicate_pte (uint64_t *pte, void *va, void *aux) {
+        struct thread *current = thread_current ();
+        struct thread *parent = (struct thread *) aux;
+        void *parent_page;
+        void *newpage;
+        bool writable;
+
+        /* 1. TODO: If the parent_page is kernel page, then return immediately. */
+        if (is_kernel_vaddr(va))
+            return true;
+
+        /* 2. Resolve VA from the parent's page map level 4. */
+        parent_page = pml4_get_page(parent->pml4, va);
+        if (parent_page == NULL)
+            return false;
+
+        /* 3. TODO: Allocate new PAL_USER page for the child and set result to
+        *    TODO: NEWPAGE. */
+        newpage = palloc_get_page(PAL_USER | PAL_ZERO);
+        if (newpage == NULL)
+            return false;
+
+        /* 4. TODO: Duplicate parent's page to the new page and
+        *    TODO: check whether parent's page is writable or not (set WRITABLE
+        *    TODO: according to the result). */
+        memcpy(newpage, parent_page, PGSIZE);
+        writable = is_writable(pte);
+
+        /* 5. Add new page to child's page table at address VA with WRITABLE
+        *    permission. */
+        if (!pml4_set_page(current->pml4, va, newpage, writable))
+        {
+            /* 6. TODO: if fail to insert page, do error handling. */
+            return false;
+        }
+
+        return true;
+    }
+    ```
+- 마지막으로, 다음과 같이 부모를 복제한 새로운 스레드가 생성되었으면 부모 스레드의 자식 리스트에 추가해야 한다.
+    ```C
+    /* threads/thread.c */
+    tid_t thread_create (const char *name, int priority, thread_func *function, void *aux) {
+        . . .
+
+        // 새로운 스레드를 생성하였으므로, 현재 스레드의 자식 리스트에 추가
+        list_push_back (&thread_current ()->child_list, &t->child_elem);
+
+        t->fdt = palloc_get_multiple (PAL_ZERO, FDT_PAGES);
+        if (t->fdt == NULL)
+            return TID_ERROR;
+
+        . . .
+    }
+    ```
+
+### 현재 프로세스를 새로운 프로세스로 덮어 씌워 실행하는 EXEC 시스템 콜 함수 구현
+- exec() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    #include "include/threads/palloc.h" // EXEC 시스템 콜 함수에서 PAL_ZERO를 사용하기 위한 헤더 추가
+    #include "include/userprog/process.h" // EXEC 시스템 콜 함수에서 process_exec() 함수를 호출하기 위한 헤더 추가
+    ```
+    ```C
+    /* userprog/syscall.c */
+    /* 현재 프로세스를 새로운 프로세스로 덮어 씌워 실행하는 시스템 콜 함수 */
+    int exec (const char *file) {
+        check_address (file); // 현재 가리키는 주소가 유저 영역의 주소인지 확인하여, 잘못된 주소이면 프로세스 종료
+        char *fn_copy = palloc_get_page (PAL_ZERO); // 커널 풀에서 페이지를 가져와 페이지를 0으로 채우고, 사용 가능한 페이지가 없으면 NULL 포인터 반환
+
+        // 메모리 할당 실패 시, 프로세스 종료
+        if(fn_copy == NULL)
+            exit (-1);
+        
+        strlcpy (fn_copy, file, PGSIZE); // 파일 이름 복사
+
+        // 복사한 파일 이름을 인자로 process_exec() 함수를 호출하고, load에 실패한 경우 프로세스 종료
+        if (process_exec (fn_copy) == -1)
+            exit (-1);
+    }
+    ```
+    - 인자로 받아온 command line의 주소가 유저 영역의 주소인지 check_address() 함수로 확인한다.
+        - 잘못된 주소를 가르키면, 프로세스를 종료한다.
+    - 커널 풀에서 페이지를 가져와 페이지를 0으로 채우고, 가능한 페이지가 없으면 NULL 포인터를 반환한다.
+        - 이때, palloc_get_page() 함수에서 FLAG로 PAL_ZERO를 사용하기 위해 헤더를 추가해야 한다.
+    - 페이지를 할당받은 후, 정상적으로 페이지를 할당받았으면 넘어가고, NULL이면 프로세스를 종료한다.
+    - process_exec() 함수에서 command line을 파싱할 것이므로, command line을 복사해 둔다.
+    - command line을 인자로 process_exec() 함수를 호출하고, load에 실패한 경우 프로세스를 종료한다.
+        - 이때, process_exec() 함수를 호출하기 위해 헤더를 추가해야 한다.
+
+### 자식 프로세스가 종료될 때까지 대기하고, 정상적으로 종료되었는지 상태를 확인하는 WAIT 시스템 콜 함수 구현
+- wait() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 자식 프로세스가 종료될 때까지 대기하고, 정상적으로 종료되었는지 상태를 확인하는 시스템 콜 함수 */
+    int wait (int pid) {
+        return process_wait (pid); // 스레드 식별자 TID가 종료될 때까지 기다리고, exit status를 반환하는 process_wait() 함수 호출
+    }
+    ```
+    - WAIT 시스템 콜 함수가 호출되면, 스레드 식별자 TID가 종료될 때까지 기다리고, exit status를 반환하는 process_wait() 함수를 호출한다.<br><br>
+- wait() 함수에서 호출되는 process_wait() 함수를 다음과 같이 수정한다.
+    ```C
+    /* userprog/process.c */
+    int process_wait (tid_t child_tid UNUSED) {
+        /* XXX: Hint) The pintos exit if process_wait (initd), we recommend you
+        * XXX:       to add infinite loop here before
+        * XXX:       implementing the process_wait. */
+
+        struct thread *child = get_child_process (child_tid); // 자식 스레드 검색
+        
+        // 자식 스레드를 찾는데 실패한 경우 -1을 반환
+        if (child == NULL)
+            return -1;
+
+        sema_down (&child->wait_sema); // 자식이 종료될 때까지 부모는 대기
+        list_remove (&child->child_elem); // 자식이 종료되었다는 wait_sema 시그널을 받으면 부모의 자식 리스트에서 자식을 삭제
+        sema_up (&child->exit_sema); // 자식 스레드가 종료되고 스케줄링이 이어질 수 있도록 부모에게 시그널 전송
+
+        return child->exit_status; // 자식의 exit_status 반환
+    }
+    ```
+    - 제일 먼저 자식 스레드를 검색한다.
+    - 자식 스레드를 찾는데 실패한 경우 -1을 반환한다.
+    - 자식 스레드를 찾는데 성공하면, 자식이 종료될 때까지 부모를 대기시킨다.
+    - 자식이 종료되었다는 wait_sema 시그널을 받으면 부모의 자식 리스트에서 자식을 삭제 한 후, 다음 스케줄링이 이어질 수 잇도록 부모에게 시그널을 전송한다.
+    - 마지막으로, 자식의 종료 상태 값을 반환한다.<br><br>
+- 자식이 작업이 종료될 때까지 대기하는 부모가 자식이 작업이 종료되면, 부모를 종료시키는 process_exit() 함수를 다음과 같이 수정한다.
+    ```C
+    /* userprog/process.c */
+    void process_exit (void) {
+        struct thread *curr = thread_current ();
+        /* TODO: Your code goes here.
+        * TODO: Implement process termination message (see
+        * TODO: project2/process_termination.html).
+        * TODO: We recommend you to implement process resource cleanup here. */
+
+        // 파일 디스크립터 테이블의 모든 파일을 닫고 메모리를 반환
+        for (int i = 2; i < FD_COUNT_LIMIT; i++) {
+            if (curr->fdt[i] != NULL)
+                close (i);
+        }
+
+        palloc_free_multiple (curr->fdt, FDT_PAGES);
+        file_close (curr->running); // 현재 실행 중인 파일도 닫음
+
+        process_cleanup (); // 프로세스를 클린업
+        
+        sema_up (&curr->wait_sema); // 자식이 종료될 때까지 대기하고 있는 부모에게 자식이 종료되었다는 시그널 전송
+        sema_down (&curr->exit_sema); // 자식이 부모의 시그널을 기다렸다가, 대기가 풀리고 나면 다른 스레드가 실행
+    }
+    ```
+    - 2부터 파일 디스크립터 테이블 인덱스 제한 값인 128까지 순차적으로 검색하면서 모든 파일을 닫고 메모리를 반환한다.
+    - 현재 실행 중인 파일도 닫아줘야 한다.
+    - 파일을 모두 닫고나면, 프로세스를 클린업한다.
+    - 마지막으로 자식이 종료될 때까지 대기하고 있는 부모에게 자식이 종료되었다는 시그널을 전송하고, 부모의 대기가 풀리면 다른 스레드를 실행시킬 수 있도록 한다.
+
+### 파일을 생성하는 CREATE 시스템 콜 함수 구현
+- create() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 파일을 생성하는 시스템 콜 함수 */
+    bool create (const char *file, unsigned initial_size) {
+        check_address (file); // 현재 가리키는 주소가 유저 영역의 주소인지 확인하여, 잘못된 주소이면 프로세스 종료
+        return filesys_create (file, initial_size); // 파일 이름(file)과 크기(initial_size)에 해당하는 파일 생성(성공하면 True, 실패하면 False 반환)
+    }
+    ```
+    - CREATE 시스템 콜 함수가 호출되면, 현재 가리키는 주소가 유저 영역의 주소인지 check_address() 함수를 통해 확인한다.
+    - 잘못된 주소이면 프로세스가 종료되고, 아니면 파일 이름(file)과 크기(initial_size)에 해당하는 파일을 생성하는 filesys_create() 함수를 호출한다.
+    - 파일 생성을 성공하면, True, 실패하면 False를 반환한다.
+
+### 파일을 삭제하는 REMOVE 시스템 콜 함수 구현
+- remove() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 파일을 삭제하는 시스템 콜 함수 */
+    bool remove (const char *file) {
+        check_address (file); // 현재 가리키는 주소가 유저 영역의 주소인지 확인하여, 잘못된 주소이면 프로세스 종료
+        return filesys_remove (file); // 파일 이름(file)에 해당하는 파일 삭제
+    }
+    ```
+    - CREATE 시스템 콜 함수와 마찬가지로, check_address() 함수로 주소를 확인한다.
+    - 주소가 확인되면, 파일 이름(file)에 해당하는 파일을 삭제하는 filesys_remove 함수를 호출한다.
+
+### 파일을 오픈하는 OPEN 시스템 콜 함수 구현
+- open() 함수를 구현하기 전 두 가지 작업을 수행해야 한다.
+    - 현재 프로세스의 파일 디스크립터 테이블에 파일을 추가하는 함수를 구현해야 하고, 해당 함수를 구현하기 위한 변수를 추가해야 한다.
+        - 추가 변수를 다음과 같이 선언한다.
+            ```C
+            /* include/threads/thread.h */
+            #define FDT_PAGES 2        // 파일 디스크립터 테이블에 할당할 페이지 수
+            #define FD_COUNT_LIMIT 128 // 파일 디스크립터 테이블 인덱스 값 제한(최대 128)
+            struct file **fdt; // 파일 디스크립터 테이블 변수 선언
+            int fd_idx; // 파일 디스크립터 테이블 인덱스 변수 선언
+            ```
+            - 파일 디스크립터 테이블, 파일 디스크립터 테이블 인덱스, 파일 디스크립터 테이블 페이지 수, 파일 디스크립터 테이블 최대 인덱스 값 변수를 추가 선언한다.<br><br>
+        - 현재 프로세스의 파일 디스크립터 테이블에 파일을 추가하는 add_file_to_fdt 함수를 다음과 같이 구현한다.
+            ```C
+            /* userprog/syscall.c */
+            /* 현재 프로세스의 파일 디스크립터 테이블에 파일을 추가하는 함수 */
+            int add_file_to_fdt (struct file *file) {
+                struct thread *cur = thread_current (); // 현재 스레드 저장
+                struct file **fdt = cur->fdt; // 현재 스레드의 파일 디스크립터 테이블 저장
+
+                // FD_COUNT_LIMIT 범위를 넘지 않는 범위 안에서 빈 자리 탐색
+                while (cur->fd_idx < FD_COUNT_LIMIT && fdt[cur->fd_idx]) {
+                    cur->fd_idx++;
+                }
+
+                // 파일 디스크립터 테이블이 가득차서 할당에 실패한 경우 -1 반환
+                if (cur->fd_idx >= FD_COUNT_LIMIT)
+                    return -1;
+
+                // 할당 가능한 파일 디스크립터 테이블 인덱스 위치를 찾은 경우, 해당 자리에 파일을 할당하고 현재 스레드의 파일 디스크립터 테이블 인덱스 반환
+                fdt[cur->fd_idx] = file;
+                return cur->fd_idx;
+            }
+            ```
+- open() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 파일을 오픈하는 시스템 콜 함수 */
+    int open (const char *file) {
+        check_address (file); // 현재 가리키는 주소가 유저 영역의 주소인지 확인하여, 잘못된 주소이면 프로세스 종료
+        struct file *open_file = filesys_open (file); // filesys_open() 함수를 이용하여 파일 오픈
+
+        // 파일을 찾지 못하거나 내부 메모리 할당에 실패하여 파일을 열 수 없는 경우 -1 반환
+        if (open_file == NULL) {
+            return -1;
+        }
+
+        int fd = add_file_to_fdt (open_file); // 파일 디스크립터 테이블에 file 추가(성공하면 fd, 실패하면 -1 반환)
+
+        // 파일 디스크립터 테이블에 추가할 수 없는 경우 파일을 닫고 -1 반환
+        if (fd == -1) {
+            file_close (open_file);
+        }
+
+        return fd; // fd 반환
+    }
+    ```
+
+### fd로 파일을 찾는 FILESIZE 시스템 콜 함수 구현
+-  filesize() 함수를 구현하기 전, fd로 파일을 찾는 함수를 먼저 다음과 같이 구현해야 한다.
+    ```C
+    /* userprog/syscall.c */
+    /* fd로 파일을 찾는 함수 */
+    static struct file *find_file_by_fd (int fd) {
+        struct thread *cur = thread_current (); // 현재 스레드 구조체 저장
+
+        // fd가 0보다 작거나, FD_COUNT_LIMIT를 넘는 경우 NULL 반환
+        if (fd < 0 || fd >= FD_COUNT_LIMIT) {
+            return NULL;
+        }
+
+        return cur->fdt[fd]; // 현재 스레드에 해당하는 fd를 찾은 경우 해당 fd 반환
+    }
+    ```
+- filesize() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 파일 크기를 알려주는 시스템 콜 함수 */
+    int filesize (int fd) {
+        struct file *open_file = find_file_by_fd (fd); // find_file_by_fd() 함수를 이용하여 파일 디스크립터 테이블에서 열려있는 파일 검색
+
+        // 파일을 찾지 못하거나 내부 메모리 할당에 실패하여 파일을 열 수 없는 경우 -1 반환
+        if (open_file == NULL) {
+            return -1;
+        }
+
+        return file_length (open_file); // file_length() 함수를 이용하여 찾은 파일의 크기를 bytes 단위로 반환
+    }
+    ```
+
+### 열린 파일의 데이터를 읽는 READ 시스템 콜 함수
+- 열린 파일의 데이터를 읽고 버퍼에 저장하는 과정에서 다른 파일의 접근을 막기 위한 lock 선언 및 초기화 한다.
+    ```C
+    /* include/userprog/syscall.h */
+    struct lock filesys_lock; // 열린 파일의 데이터를 읽고 버퍼에 저장하는 과정에서 다른 파일의 접근을 막기 위해 lock 선언
+    ```
+    ```C
+    /* userprog/syscall.c */
+    void syscall_init (void) {
+        . . .
+
+        lock_init(&filesys_lock); // 열린 파일의 데이터를 읽고 버퍼에 저장하는 과정에서 다른 파일의 접근을 막기 위해 lock 초기화
+    }
+    ```
+- read() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일의 데이터를 읽는 시스템 콜 함수 */
+    int read (int fd, void *buffer, unsigned size) {
+        check_address (buffer); // 인자로 받은 버퍼 포인터 주소 확인
+
+        off_t read_byte;
+        uint8_t *read_buffer = buffer;
+
+        // fd가 0인 경우(=STDIN) 키보드로부터 입력을 받아오는 input_getc 함수를 호출해 size만큼 값 read
+        if (fd == 0) {
+            char key;
+            for (read_byte = 0; read_byte < size; read_byte++) {
+                key = input_getc ();
+                *read_buffer++ = key;
+                if (key == '\0') {
+                    break;
+                }
+            }
+        }
+
+        // fd가 1인 경우(=STDOUT) -1 반환
+        else if (fd == 1)
+        {
+            return -1;
+        }
+
+        // fd가 2 이상인 경우(=정상 fd) find_file_by_fd() 함수를 호출해 fd에 해당하는 파일 검색
+        else
+        {
+            struct file *read_file = find_file_by_fd (fd); // fd로 열린 파일 검색
+
+            // 열린 파일을 찾지 못하면, -1 반환
+            if (read_file == NULL)
+            {
+                return -1;
+            }
+
+            lock_acquire (&filesys_lock); // 열린 파일의 데이터를 읽고 버퍼에 저장하는 과정에서 다른 파일의 접근을 막기 위해 lock 획득
+            read_byte = file_read (read_file, buffer, size); // 파일에서 현재 위치부터 size 바이트 만큼 데이터를 읽어서 버퍼에 저장하는 file_read() 함수 호출
+            lock_release (&filesys_lock); // 열린 파일의 데이터를 읽고 버퍼에 저장을 완료하면 lock 해제
+        }
+        return read_byte;
+    }
+    ```
+
+### 열린 파일의 데이터를 기록하는 WRITE 시스템 콜 함수
+- 전에 임시로 구현했던, write() 함수를 다음과 같이 다시 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일의 데이터를 기록하는 시스템 콜 함수 */
+    int write (int fd, const void *buffer, unsigned size) {
+        check_address (buffer); // 인자로 받은 버퍼 포인터 주소 확인
+
+        int bytes_write = 0;
+
+        // fd가 1인 경우(=STDOUT) 버퍼에 저장된 데이터를 화면에 출력하는 putbuf() 함수를 호출
+        if (fd == 1) {
+            putbuf (buffer, size);
+            bytes_write = size;
+        }
+
+        else {
+            // fdrk 0인 경우(STDIN) -1 반환
+            if (fd < 2) {
+                return -1;
+            }
+
+            struct file *file = find_file_by_fd (fd); // fd로 열린 파일 검색
+
+            // 열린 파일을 찾지 못 한 경우 -1 반환
+            if (file == NULL) {
+                return -1;
+            }
+
+            lock_acquire (&filesys_lock); // 열린 파일의 데이터를 기록하는 과정에서 다른 파일의 접근을 막기 위해 lock 획득
+            bytes_write = file_write (file, buffer, size); // 파일에서 현재 위치부터 size 바이트 만큼 버퍼에 있는 데이터를 기록
+            lock_release (&filesys_lock); // 열린 파일의 데이터 기록을 완료하면 lock 해제
+        }
+        return bytes_write;
+    }
+    ```
+
+### 열린 파일의 위치(offset)를 이동하는 SEEK 시스템 콜 함수
+- seek() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일의 위치(offset)를 이동하는 시스템 콜 함수 */
+    void seek (int fd, unsigned position) {
+        struct file *seek_file = find_file_by_fd (fd); // fd를 이용하여 열린 파일 검색
+
+        // 찾은 파일의 fd값이 2보다 작은 경우 리턴
+        if (seek_file <= 2) {
+            return;
+        }
+
+        return file_seek (seek_file, position); // 열린 파일을 찾았다면, file_seek() 함수를 이용하여 열린 파일의 위치를 position만큼 이동
+    }
+    ```
+
+### 열린 파일의 위치(offset)를 알려주는 TELL 시스템 콜 함수
+- tell() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일의 위치(offset)를 알려주는 시스템 콜 함수 */
+    unsigned tell (int fd) {
+        struct file *tell_file = find_file_by_fd (fd); // fd를 이용하여 열린 파일 검색
+
+        // 찾은 파일의 fd값이 2보다 작은 경우 리턴
+        if (tell_file <= 2) {
+            return;
+        }
+
+        return file_tell (tell_file); // 열린 파일을 찾았다면, file_tell() 함수를 이용하여 파일의 위치를 반환
+    }
+    ```
+
+### 열린 파일을 닫는 CLOSE 시스템 콜 함수
+- close() 함수를 구현하기 전에 파일 디스크립터 테이블에서 현재 스레드를 제거하는 remove_file_from_fdt() 함수를 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 파일 디스크립터 테이블에서 현재 스레드를 제거하는 함수 */
+    void remove_file_from_fdt (int fd) {
+        struct thread *cur = thread_current (); // 현재 스레드 저장
+
+        // 파일 디스크립터 테이블에서 0보다 작지 않고, 인덱스 제한 값보다 같거나 큰 경우 리턴
+        if (fd < 0 || fd >= FD_COUNT_LIMIT) {
+            return;
+        }
+
+        cur->fdt[fd] = NULL; // 현재 스레드를 찾은 경우 현재 스레드 파일 디스크립터 테이블에 NULL 할당
+    }
+    ```
+- close() 함수를 다음과 같이 구현한다.
+    ```C
+    /* userprog/syscall.c */
+    /* 열린 파일을 닫는 시스템 콜 함수 */
+    void close (int fd) {
+        struct file *close_file = find_file_by_fd (fd); // fd를 이용하여 열린 파일 검색
+
+        // 파일을 찾는데 실패한 경우 리턴
+        if (close_file == NULL) {
+            return;
+        }
+
+        file_close (close_file); // file_close()로 파일 닫기
+        remove_file_from_fdt (fd); // remove_file_from_fdt() 함수를 이용하여 닫은 파일 삭제
+    }
+    ```
+
+### 과제 ALL PASS를 통과하기 위한 추가 과정
+1. 현재 실행 중인 파일을 수정하는 일이 발생하는 것을 방지하기 위해 실행 중인 파일에 대한 쓰기 작업을 거부하는 코드 추가
+    ```C
+    /* userprog/process.c */
+    static bool load (const char *file_name, struct intr_frame *if_) {
+        . . .
+
+        t->running = file; // 현재 스레드의 실행중인 파일 저장
+        file_deny_write(file); // 현재 실행 중인 파일을 수정하는 일이 발생하는 것을 방지하기 위해 실행 중인 파일에 대한 쓰기 작업을 거부하는 file_deny_write() 함수 호출
+
+        . . .
+    }
+    ```  
+2. file_close()를 호출하여 작업을 수행하면 파일이 닫히면서 lock이 풀리므로, 이를 방지하기 위해 주석 처리
+    ```C
+    /* userprog/process.c */
+    static bool load (const char *file_name, struct intr_frame *if_) {
+        . . .
+
+        // file_close (file); // file_close()를 호출하여 작업을 수행하면 파일이 닫히면서 lock이 풀리므로, 이를 방지하기 위해 주석 처리
+
+        . . .
+    }
+    ```  
+3. Page fault 에러가 발생했을 때 -1을 반환하고 프로세스를 종료할 수 있도록 코드 추가
+    ```C
+    static void page_fault (struct intr_frame *f) {
+        . . .
+
+        exit(-1); // Page fault 에러가 발생했을 때 -1을 반환하고 프로세스를 종료
+
+        . . .
+    }
+    ```
+
+### System Call 구현 트러블 슈팅
+1. HALT, EXIT 시스템 콜 함수 구현 후, 테스트 실패 발생
+    - Argument Stack을 구현하는 과정에서 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장
+
+### System Call 구현 결과
+```
+All 95 tests passed.
+```
+```
+TOTAL TESTING SCORE: 100.0%
+ALL TESTED PASSED -- PERFECT SCORE
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+SUMMARY BY TEST SET
+
+Test Set                                      Pts Max  % Ttl  % Max
+--------------------------------------------- --- --- ------ ------
+tests/threads/Rubric.alarm                      7/  7   2.0%/  2.0%
+tests/threads/Rubric.priority                  25/ 25   3.0%/  3.0%
+tests/userprog/Rubric.functionality            40/ 40  40.0%/ 40.0%
+tests/userprog/Rubric.robustness               40/ 40  30.0%/ 30.0%
+tests/userprog/no-vm/Rubric                     3/  3  10.0%/ 10.0%
+tests/filesys/base/Rubric                      17/ 17  15.0%/ 15.0%
+--------------------------------------------- --- --- ------ ------
+Total                                                 100.0%/100.0%
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+```
+
+핀토스 프로젝트2 끝!!!!!!!!!!!!!!!!🫡
