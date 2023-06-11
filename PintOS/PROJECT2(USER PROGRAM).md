@@ -1889,7 +1889,7 @@ fork(const char *thread_name, struct intr_frame *f) {
     }
     ```
 
-### 열린 파일의 데이터를 읽는 READ 시스템 콜 함수
+### 열린 파일의 데이터를 읽는 READ 시스템 콜 함수 구현
 - 열린 파일의 데이터를 읽고 버퍼에 저장하는 과정에서 다른 파일의 접근을 막기 위한 lock 선언 및 초기화 한다.
     ```C
     /* include/userprog/syscall.h */
@@ -1950,7 +1950,7 @@ fork(const char *thread_name, struct intr_frame *f) {
     }
     ```
 
-### 열린 파일의 데이터를 기록하는 WRITE 시스템 콜 함수
+### 열린 파일의 데이터를 기록하는 WRITE 시스템 콜 함수 구현
 - 전에 임시로 구현했던, write() 함수를 다음과 같이 다시 구현한다.
     ```C
     /* userprog/syscall.c */
@@ -1987,7 +1987,7 @@ fork(const char *thread_name, struct intr_frame *f) {
     }
     ```
 
-### 열린 파일의 위치(offset)를 이동하는 SEEK 시스템 콜 함수
+### 열린 파일의 위치(offset)를 이동하는 SEEK 시스템 콜 함수 구현
 - seek() 함수를 다음과 같이 구현한다.
     ```C
     /* userprog/syscall.c */
@@ -2004,7 +2004,7 @@ fork(const char *thread_name, struct intr_frame *f) {
     }
     ```
 
-### 열린 파일의 위치(offset)를 알려주는 TELL 시스템 콜 함수
+### 열린 파일의 위치(offset)를 알려주는 TELL 시스템 콜 함수 구현
 - tell() 함수를 다음과 같이 구현한다.
     ```C
     /* userprog/syscall.c */
@@ -2021,7 +2021,7 @@ fork(const char *thread_name, struct intr_frame *f) {
     }
     ```
 
-### 열린 파일을 닫는 CLOSE 시스템 콜 함수
+### 열린 파일을 닫는 CLOSE 시스템 콜 함수 구현
 - close() 함수를 구현하기 전에 파일 디스크립터 테이블에서 현재 스레드를 제거하는 remove_file_from_fdt() 함수를 구현한다.
     ```C
     /* userprog/syscall.c */
