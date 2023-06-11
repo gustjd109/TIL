@@ -2091,7 +2091,51 @@ fork(const char *thread_name, struct intr_frame *f) {
 
 ### System Call 구현 트러블 슈팅
 1. HALT, EXIT 시스템 콜 함수 구현 후, 테스트 실패 발생
-    - Argument Stack을 구현하는 과정에서 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장
+    - Argument Stack을 구현하는 과정에서 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장시켜 주어야 하는데 해당 작업을 하지 않아 테스트에 실패했다.
+    - 아래 코드와 같이 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장하는 코드(5번 과정)를 추가한 후, 시스템 콜 테스트가 정상적으로 가능해졌다.
+        ```C
+        /* parsing한 arguments를 user stack에 넣어주는 함수 */
+        /* if_->rsp는 현재 user stack에서 현재 위치를 가리키는 스택 포인터로, 맨 처음 if_->rsp는 0x47480000(USER_STACK)이다. */
+        void
+        argument_stack(char **argv, int argc, struct intr_frame *_if) {
+            char *arg_address[128];
+
+            // 1) 프로그램 이름, 인자 문자열 삽입
+            // 스택은 아래 방향으로 성장하므로 스택에 인자를 추가할 때 문자열을 오른쪽에서 왼쪽 방향으로(역방향으로) 삽입해야 한다.
+            for (int i = argc - 1; i >= 0; i--) { // 맨 끝 NULL 값(arg[4]) 제외하고, 가장 인덱스가 큰 argv부터 스택에 삽입
+                int argv_len = strlen(argv[i]);  // 각 인자의 크기 저장
+                _if->rsp -= (argv_len + 1); // 각 인자에서 인자 크기(argv_len)를 읽고, 그 크기만큼 rsp를 내림
+                memcpy(_if->rsp, argv[i], argv_len + 1); // 그 다음 빈 공간만큼 memcpy() 함수를 이용하여 스택에 삽입(각 인자에 sentinel이 포함이므로, argv_len + 1)
+                arg_address[i] = _if->rsp; // arg_address 배열에 현재 문자열 시작 주소 위치 저장
+            }
+
+            // 2) word-align 패딩 삽입
+            // 각 문자열을 삽입하고, 8바이트 단위로 정렬하기 위해 필요한 만큼 패딩을 추가한다.
+            while(_if->rsp % 8 != 0) { // _if->rsp 주소값을 8로 나눴을 때 나머지가 0일 때까지 반복문 수행
+                _if->rsp--; // _if->rsp -1 이동
+                *(uint8_t *)(_if->rsp) = 0; // _if.rsp가 가리키는 내용물을 0으로 채움(1바이트)
+            }
+
+            // 3) 각 인자 문자열의 주소 삽입
+            // 인자 문자열 삽입하면서 argv에 담아둔 각 문자열의 주소를 삽입한다.
+            for (int i = argc; i >= 0; i--) { // 
+                _if->rsp -= 8; // _if->rsp를 8 내림
+                if (i == argc) // i값이 argc값과 같으면
+                    memset(_if->rsp, 0, 8); // _if->rsp에 0을 추가(sentinel 같은 느낌?)
+                else 
+                    memcpy(_if->rsp, &arg_address[i], 8); // 나머지에는 arg_address 안에 들어있는 각 문자열의 주소를 스택에 삽입
+            }
+            
+            // 4) return address 삽입
+            // 다음 인스트럭션의 주소를 삽입해야 하는데, 지금은 프로세스를 생성하는 거라서 반환 주소가 없기 때문에 fake return address로 0을 추가한다.
+            _if->rsp -= 8; // _if->rsp를 8 내림
+            memset(_if -> rsp, 0, 8); // _if->rsp를 return address로 0을 추가  
+
+            // 5) 인자의 개수와 argv 시작 주소를 각각 rdi와 rsi에 저장
+            _if->R.rdi = argc; // rdi에 인자의 개수 저장
+            _if->R.rsi = _if->rsp + 8; // 스택에 마지막에 추가한 fake address를 담기 직전의 주소가 argv에 시작 주소로 설정되어 있으므로, rsi에 현재 스택 포인터 rsp에 8만큼 더한 값 저장
+        }
+        ```
 
 ### System Call 구현 결과
 ```
