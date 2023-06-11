@@ -1030,3 +1030,6 @@ atomic이란?
 개념적인 내용에 대해서 잘 대답하고
 추가로 “그것들의 내부 구현은 이렇게 되어있습니다” 라고 설명한다면
 기본기가 충실하면서, 경쟁력 있는 신입으로 보이지 않을까요?
+
+https://poalim.tistory.com/34
+https://e-juhee.tistory.com/entry/Pintos-KAIST-Project-1-Priority-Scheduling
