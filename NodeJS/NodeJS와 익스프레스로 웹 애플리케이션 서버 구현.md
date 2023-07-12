@@ -164,7 +164,47 @@
     - 분기문에 사용되는 매개변수가 같은 패턴을 보일 때는 맵 자료구조를 사용하는 것이 좋으며, 우리가 만든 라우팅 규칙도 분기문에 들어가는 매개변수라 같은 패턴을 보이기 때문에 맵을 사용해서 분기문을 조금 더 깔끔하게 할 수 있다.<br><br>
 2. 리팩터링한 라우터 소스 코드
     ```js
+    const http = require("http");
+    const url = require("url"); // url 모듈을 로딩
+    http
+        .createServer((req,res) => {
+            const path = url.parse(req.url, true).pathname; // 패스명 할당
+            res.setHeader("Content-Type", "text/html; charset=utf-8");
 
+            if (path in urlMap) { // urlMap에 path가 있는지 확인
+                urlMap[path](req, res); // urlMap에 path값으로 매핑된 함수 실행
+            } else {
+                notFound(req, res); // 결괏값으로 에러 메시지 설정
+            }
+        })
+        .listen("3000", () => console.log("라우터를 리팩터링해보자!"));
+
+    const user = (req, res) => {
+        const userInfo = url.parse(req.url, true).query; // 쿼리 스트링 데이터를 userInfo에 할당
+        res.end(`[user] name : ${userInfo.name}, age : ${userInfo.age}`); // 결괏값으로 이름과 나이 설정
+    };
+
+    const feed = (req, res) => {
+        res.end(`
+        <ul>
+            <li>picture1</li>
+            <li>picture2</li>
+            <li>picture3</li>
+        </ul>
+        `);
+    };
+
+    const notFound = (req, res) => {
+        res.statusCode = 404;
+        res.end("404 page not found");
+    }
+
+    // 라우터 규칙 매핑 키로 path가 들어가고 값에 함수를 할당
+    const urlMap = {
+        "/": (req, res) => res.end("HOME"),
+        "/user": user,
+        "/feed": feed,
+    }
     ```
     - urlMap[키]를 넣으면 키에 해당하는 값을 반환한다.
     - 키로 path를 넣으면 값인 함수가 반환된다.
