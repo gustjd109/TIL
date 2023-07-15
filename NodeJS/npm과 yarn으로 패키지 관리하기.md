@@ -36,18 +36,18 @@
             $ node
             > module.paths
             [
-            '/Users/hyunsunghwang/Desktop/NodeJS/jsbackend/연습/chapter4/sample-package/repl/node_modules',
-            '/Users/hyunsunghwang/Desktop/NodeJS/jsbackend/연습/chapter4/sample-package/node_modules',
-            '/Users/hyunsunghwang/Desktop/NodeJS/jsbackend/연습/chapter4/node_modules',
-            '/Users/hyunsunghwang/Desktop/NodeJS/jsbackend/연습/node_modules',
-            '/Users/hyunsunghwang/Desktop/NodeJS/jsbackend/node_modules',
-            '/Users/hyunsunghwang/Desktop/NodeJS/node_modules',
-            '/Users/hyunsunghwang/Desktop/node_modules',
-            '/Users/hyunsunghwang/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/jsbackend/연습/chapter4/sample-package/repl/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/jsbackend/연습/chapter4/sample-package/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/jsbackend/연습/chapter4/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/jsbackend/연습/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/jsbackend/node_modules',
+            '/Users/Usersname/Desktop/NodeJS/node_modules',
+            '/Users/Usersname/Desktop/node_modules',
+            '/Users/Usersname/node_modules',
             '/Users/node_modules',
             '/node_modules',
-            '/Users/hyunsunghwang/.node_modules',
-            '/Users/hyunsunghwang/.node_libraries',
+            '/Users/Usersname/.node_modules',
+            '/Users/Usersname/.node_libraries',
             '/usr/local/lib/node'
             ]
             ```
