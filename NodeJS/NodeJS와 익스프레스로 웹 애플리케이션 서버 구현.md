@@ -352,7 +352,313 @@
             });
             ```
 
-## 8. 핵심 용어
+## 8. res.json() VS res.send()
+1. res.json()와 res.send()의 차이점
+    - 외부에서 보기에는 차이가 없지만, res.send()는 내부에서 호출 한 번이 더 일어나는 것을 볼 수 있다.
+    - 또한, Object를 보낼 땐 res.json()을 이용하는 게 더 직관적이기도 하기 때문에 res.json()을 이용하는 것이 좋다.
+
+## 9. Middleware
+1. Middleware란?
+    - Express는 자체 기능이 최소화된 라우팅 및 미들웨어 웹 프레임워크다.
+    - Express 애플리케이션은 본질적으로 일련의 미들웨어 기능 호출이다.
+    - 미들웨어 기능은 애플리케이션의 요청-응답 주기에서 요청 객체(req), 응답(res), next 미들웨어 함수에 접근할 수 있는 기능이다.
+        - next 미들웨어 기능은 일반적으로 next라는 변수로 표시된다.
+    - 즉, Express 애플리케이션은 본질적으로 일련의 미들웨어 기능 호출이다.<br><br>
+2. Middleware 생성
+    - app.use 메소드를 사용한다.
+    - 실습 소스 코드
+        ```js
+        const express = require('express');
+
+        const PORT = 3000;
+
+        const Users = [
+            {
+                id: 0,
+                name: 'Jack'
+            },
+            {
+                id: 1,
+                name: 'Jennifer'
+            }
+        ]
+        const app = express();
+
+        app.use((req, res, next) => {
+            const start = Date.now();
+            console.log(`${req.method} ${req.url}`);
+            next();
+            const diffTime = Date.now() - start;
+            console.log(`end: ${req.method} ${req.url} ${diffTime}ms`);
+        })
+
+        app.get('/users', (req, res) => {
+            res.send(Users);
+        });
+
+        app.get('/users/:userId', (req, res) => {
+            const userId = Number(req.params.userId);
+            const user = Users[userId];
+            if(user) {
+                res.json(user);
+            } else {
+                res.sendStatus(404);
+            }
+        });
+
+        app.get('/', (req, res) => {
+            res.send('Hello World!');
+        });
+
+        app.listen(PORT, () => {
+            console.log(`Running on port ${PORT}`);
+        });
+        ```
+
+## 10. express.json()
+1. express.json()란?
+    - POST 요청할 때 사용한다.
+    - 예를 들어, 어떤 배열에 POST 요청하여 새로운 데이터를 추가할 때 undefined 문제가 발생한다.
+        - 이때, 원래는 bodyParser 모듈을 이용하여 해결해줄 수 있었지만, express 4.16.0부터는 express에 들어 있는 내장 미들웨어 함수로 bodyParser 모듈을 대체해줄 수 있다.
+        - app.use(express.json());를 미들웨어로 등록해주면 된다.
+    - 만약, 요청 body가 없을 때 조건을 처리하기 위해서는 400 상태 코드를 보내주면 된다.
+        - 응답을 보내준 후에는 아래 코드가 실행되지 않도록 return 형식으로 응답을 보내줘야 한다.<br><br>
+2. express.json() 실습 소스 코드
+    ```js
+    const express = require('express');
+
+    const PORT = 3000;
+
+    const Users = [
+        {
+            id: 0,
+            name: 'Jack'
+        },
+        {
+            id: 1,
+            name: 'Jennifer'
+        }
+    ]
+    const app = express();
+    app.use(express.json());
+
+    app.use((req, res, next) => {
+        const start = Date.now();
+        console.log(`${req.method} ${req.url}`);
+        next();
+        const diffTime = Date.now() - start;
+        console.log(`end: ${req.method} ${req.url} ${diffTime}ms`);
+    });
+
+    app.get('/users', (req, res) => {
+        res.send(Users);
+    });
+
+    app.get('/', (req, res) => {
+        res.send('Hello World!');
+    });
+
+    app.post('/users', (req, res) => {
+        if (!req.body.name) {
+            return res.status(404).json({
+                error: 'Missing user name'
+            });
+        }
+
+        const newUser = {
+            name: req.body.name,
+            id: Users.length
+        }
+        Users.push(newUser);
+        res.json(newUser);
+    });
+
+    app.get('/users/:userId', (req, res) => {
+        const userId = Number(req.params.userId);
+        const user = Users[userId];
+        if(user) {
+            res.json(user);
+        } else {
+            res.sendStatus(404);
+        }
+    });
+
+    app.listen(PORT, () => {
+        console.log(`Running on port ${PORT}`);
+    });
+    ```
+
+## 11. MVC(Model, View, Controller) 패턴
+1. MVC 패턴이란?
+    - 관련 프로그램 로직을 상호 연결된 3개의 요소로 나누는 사용자 인터페이스를 개발하는 데 일반적으로 사용되는 소프트웨어 아키텍처 패턴이다.<br><br>
+2. 모델
+    - 데이터와 비즈니즈 로직을 관리한다.
+    - 앱이 포함해야 할 데이터가 무엇인지를 정의한다.
+    - 데이터의 상태가 변경되면 모델을 일반적으로 뷰에게 알리며 가끔 컨트롤러에게 알리기도 한다.<br><br>
+3. 뷰
+    - 레이아웃과 화면을 처리한다.
+    - 앱의 데이터를 보여주는 방식을 정의한다.
+    - 항목이 사용자에게 보여지는 방식을 정의하며, 표시할 데이터를 모델로부터 받는다.<br><br>
+4. 컨트롤러
+    - 명령을 모델과 뷰 부분으로 라우팅한다.
+    - 앱의 사용자로부터의 입력에 대한 응답으로 모델 및 뷰를 업데이트하는 로직을 포함한다.<br><br>
+5. MVC 패턴 실습
+    - 모델, 뷰, 컨트롤러 파일을 모두 생성해주고, 코드를 나눠준다.<br><br>
+    - server.js
+        ```js
+        const express = require('express');
+        const usersController = require('./controllers/users.controller');
+        const postsController = require('./controllers/posts.controller');
+        const PORT = 3000;
+        const app = express();
+
+        app.use(express.json());
+
+        app.use((req, res, next) => {
+            const start = Date.now();
+            console.log(`${req.method} ${req.url}`);
+            next();
+            const diffTime = Date.now() - start;
+            console.log(`end: ${req.method} ${req.url} ${diffTime}ms`);
+        });
+
+        app.get('/users', usersController.getUsers);
+        app.get('/users/:userId', usersController.getUser);
+        app.post('/users', usersController.postUser);
+        app.get('/posts', postsController.getPost);
+
+        app.listen(PORT, () => {
+            console.log(`Running on port ${PORT}`);
+        });
+        ```
+    - postsController.js
+        ```js
+        function getPost(req, res) {
+            res.send('<div><h1>Post Title</h1><p>This is a post</p></div>');
+        };
+
+        module.exports = {
+            getPost
+        };
+        ```
+    - usersController.js
+        ```js
+        const model = require('../models/users.model');
+
+        function getUsers(req, res) {
+            res.send(model);
+        };
+
+        function getUser(req, res) {
+            const userId = Number(req.params.userId);
+            const user = model[userId];
+            if(user) {
+                res.json(user);
+            } else {
+                res.sendStatus(404);
+            }
+        };
+
+        function postUser(req, res) {
+            if (!req.body.name) {
+                return res.status(404).json({
+                    error: 'Missing user name'
+                });
+            }
+
+            const newUser = {
+                name: req.body.name,
+                id: model.length
+            }
+            model.push(newUser);
+            res.json(newUser);
+        };
+
+        module.exports = {
+            getUsers,
+            getUser,
+            postUser
+        };
+        ```
+    - users.model.js
+        ```js
+        const Users = [
+            {
+                id: 0,
+                name: 'Jack'
+            },
+            {
+                id: 1,
+                name: 'Jennifer'
+            }
+        ];
+
+        module.exports = Users;
+        ```
+
+## 12. Router
+1. Router란?
+    - 클라이언트의 요청 경로에 따라 이 요청을 처리할 수 있는 곳으로 기능을 전달해주는 것이다.
+    - 애플리케이션이 점점 커질수록 server.js 파일에 api들이 많아져서 복잡해지게 된다.
+    - 이럴 때 router를 이용하면, 이 부분을 정리해줄 수 있다.<br><br>
+2. Router 실습
+    - routes 폴더를 생성해주고, posts.router.js, users.router.js 파일을 만들어준다.<br><<br>
+    - server.js
+        ```js
+        const express = require('express');
+        const usersRouter = require('./routes/users.router');
+        const postRouter = require('./routes/posts.router');
+        const PORT = 3000;
+        const app = express();
+        app.use(express.json());
+
+        app.use((req, res, next) => {
+            const start = Date.now();
+            console.log(`start: ${req.method} ${req.url}`);
+            next();
+            const diffTime = Date.now() - start;
+            console.log(`end: ${req.method} ${req.baseUrl} ${diffTime}ms`);
+        });
+
+        app.use('/users', usersRouter);
+        app.use('/posts', postRouter);
+
+        app.listen(PORT, () => {
+            console.log(`Running on port ${PORT}`);
+        });
+        ```
+    - users.router.js
+        ```js
+        const express = require('express');
+        const usersRouter = express.Router();
+        const usersController = require('../controllers/users.controller');
+
+        usersRouter.get('/', usersController.getUsers);
+        usersRouter.get('/:userId', usersController.getUser);
+        usersRouter.post('/', usersController.postUser);
+
+        module.exports = usersRouter;
+        ```
+    - posts.router.js
+        ```js
+        const express = require('express');
+        const postRouter = express.Router();
+        const postsController = require('../controllers/posts.controller');
+
+        postRouter.get('/', postsController.getPost);
+
+        module.exports = postRouter;
+        ```
+
+## 13. RESTful API
+1. RESTful API란?
+    - 두 컴퓨터 시스템이 인터넷을 통해 정보를 안전하게 교환하기 위해 사용하는 인터페이스다.
+    - 통신을 할 때 안전하고 효율적인 방법을 위해서 사용하는 것이다.<br><br>
+2. REST란?
+    - Representational State Transfer의 약자로, 처음에 인터넷과 같은 복잡한 네트워크에서 통신을 관리하기 위한 지침이다.
+    - 덕분에 REST 기반의 아키텍처를 사용해서 대규모 고성능 통신을 안정적으로 지원힌다.
+
+## 9. 핵심 용어
 - RESTful API
     - REST 구조를 사용하는 API이다.
     - REST(Representational State Transfer)는 HTTP URL를 통해 자원을 명시하고 HTTP 메소드(POST, GET, PUT, DELETE 등)를 사용해 자원을 처리한다.
