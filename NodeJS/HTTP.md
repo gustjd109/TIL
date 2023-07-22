@@ -80,3 +80,44 @@
     - 예
         - 200 OK : 성공적인 HTTP 요청을 위한 코드
         - 404 Not Found : 요청된 페이지에 대한 코드를 찾을 수 없습니다.
+
+## 7. Server & Route 실습
+1. 실습 소스코드
+    ```js
+    const http = require('http');
+    const port = 3000;
+    const targetObject = {a: "a", b: "b"};
+    const server = http.createServer((req, res) => {
+        if(req.method === 'POST' && req.url === '/home') {
+            req.on('data', (data) => {
+                console.log(data);
+                const stringfiedeData = data.toString();
+                console.log(stringfiedeData);
+            Object.assign(targetObject, JSON.parse(stringfiedeData));
+            })
+        } else {
+            if(req.url === '/home') {
+                res.writeHead(200, {
+                    'Content-Type': 'application/json'
+                })
+                res.end(JSON.stringify(targetObject));
+            } else if(req.url === '/about') {
+                res.setHeader('Content-Type', 'text/html');
+                res.write('<html>');
+                res.write('<body>');
+                res.write('<h1>About Page</h1>');
+                res.write('</body>');
+                res.write('</html>');
+            } else {
+                res.statusCode = 404;
+                res.end();
+            }
+        }
+    })
+
+    server.listen(port, () => {
+        console.log(`Listening on port ${port}...`);
+    })
+    ```
+    - http://localhost:3000/home 페이지에서 개발자 도구의 Console을 이용하여 다음과 같음 명령어를 이용하면, POST 메소드를 이용한 데이터를 추가할 수 있다.
+        - fetch('http://localhost:3000/home', { method: 'POST', body: JSON.stringify({c: "c"})});
